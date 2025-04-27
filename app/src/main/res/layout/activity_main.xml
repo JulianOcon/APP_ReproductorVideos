@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
     <!-- Barra de progreso mientras se cargan los videos -->
     <ProgressBar
@@ -12,11 +13,25 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
+    <!-- Caja de búsqueda -->
+    <EditText
+        android:id="@+id/searchEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Buscar video..."
+        android:padding="12dp"
+        android:background="@android:drawable/edit_text"
+        android:drawableStart="@android:drawable/ic_menu_search"
+        android:inputType="text"
+        android:layout_marginBottom="8dp"/>
+
     <!-- RecyclerView para mostrar los videos -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="16dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:contentDescription="Lista de videos disponibles" />
 
 </LinearLayout>

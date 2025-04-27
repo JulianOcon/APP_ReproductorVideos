@@ -1,6 +1,6 @@
 package com.example.reproductorvideos.network;
-import com.example.reproductorvideos.model.Video;
 
+import com.example.reproductorvideos.model.Video;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Call;
@@ -8,12 +8,11 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
-
 import java.util.List;
 
 public class RetrofitClient {
 
-    private static final String BASE_URL = "http://localhost:3000/api/"; // Ojo: si usas emulador Android no puede ser localhost
+    private static final String BASE_URL = "http://192.168.1.23:3000/api/"; // ← tu IP nueva aquí
 
     private static Retrofit retrofit = null;
 
@@ -40,6 +39,12 @@ public class RetrofitClient {
     }
 
     public interface ApiService {
+
+        // ✅ Obtener la lista de carpetas/categorías disponibles
+        @GET("categorias")
+        Call<List<String>> getCategoriasDisponibles();
+
+        // ✅ Obtener videos de una categoría
         @GET("videos/{categoria}")
         Call<List<Video>> getVideosByCategory(@Path("categoria") String categoria);
     }

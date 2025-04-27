@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
 
-    <!-- Tema basado en Material -->
-    <style name="Theme.ReproductorVideos" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Tema personalizado que hereda de Theme.AppCompat -->
+    <style name="Theme.ReproductorVideos" parent="Theme.AppCompat.Light">
+        <!-- Personaliza el tema aquí -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
 </resources>
+
