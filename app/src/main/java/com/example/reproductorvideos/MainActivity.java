@@ -1,82 +1,74 @@
-    package com.example.reproductorvideos;
+package com.example.reproductorvideos;
 
-    import android.os.Bundle;
-    import android.util.Log;
-    import android.widget.Toast;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.reproductorvideos.model.Video;
+import com.example.reproductorvideos.network.RetrofitClient;
+import com.example.reproductorvideos.network.ApiService;
+import com.example.reproductorvideos.ui.VideoAdapter;
+import java.io.IOException;
+import java.util.List;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-    import androidx.appcompat.app.AppCompatActivity;
-    import androidx.recyclerview.widget.LinearLayoutManager;
-    import androidx.recyclerview.widget.RecyclerView;
+public class MainActivity extends AppCompatActivity {
+    private RecyclerView recyclerView;
+    private VideoAdapter adapter;
+    private static final String TAG = "MainActivity";
+    private String categoriaSeleccionada;
 
-    import com.example.reproductorvideos.model.Video;
-    import com.example.reproductorvideos.network.RetrofitClient;
-    import com.example.reproductorvideos.ui.VideoAdapter;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-    import java.io.IOException;
-    import java.util.List;
+        // Recibir la categoría (puede venir vacía)
+        Intent intent = getIntent();
+        categoriaSeleccionada = intent.hasExtra("categoria")
+                ? intent.getStringExtra("categoria")
+                : "";
 
-    import retrofit2.Call;
-    import retrofit2.Callback;
-    import retrofit2.Response;
-
-    public class MainActivity extends AppCompatActivity {
-
-        private RecyclerView recyclerView;
-        private VideoAdapter adapter;
-        private static final String TAG = "MainActivity"; // Para loguear errores
-
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_main);
-
-            // Log para verificar si la actividad se ha creado correctamente
-            Log.d(TAG, "onCreate: Actividad creada");
-
-            recyclerView = findViewById(R.id.recyclerView);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-            // Llamada para cargar los videos
-            fetchVideos();
-        }
-
-        private void fetchVideos() {
-            Log.d(TAG, "fetchVideos: Iniciando solicitud de videos");
-
-            RetrofitClient.getApiService().getVideosByCategory("categoria1")
-                    .enqueue(new Callback<List<Video>>() {
-                        @Override
-                        public void onResponse(Call<List<Video>> call, Response<List<Video>> response) {
-                            if (response.isSuccessful() && response.body() != null) {
-                                List<Video> videos = response.body();
-                                Log.d(TAG, "onResponse: Videos recibidos, tamaño de la lista: " + videos.size());
-
-                                // Configuración del adaptador y asignación al RecyclerView
-                                adapter = new VideoAdapter(MainActivity.this, videos);
-                                recyclerView.setAdapter(adapter);
-                            } else {
-                                // Log cuando la respuesta no es exitosa
-                                String error = "Error en la carga de videos. Código: " + response.code();
-                                Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG).show();
-                                Log.e(TAG, "Respuesta no exitosa: " + error);
-
-                                // Intentando leer el cuerpo del error (si lo hay)
-                                try {
-                                    String errorBody = response.errorBody() != null ? response.errorBody().string() : "No hay cuerpo de error";
-                                    Log.e(TAG, "Cuerpo del error: " + errorBody);
-                                } catch (IOException e) {
-                                    Log.e(TAG, "Error al leer el cuerpo del error", e);
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<List<Video>> call, Throwable t) {
-                            // Log en caso de que falle la conexión
-                            String error = "Fallo de conexión: " + t.getLocalizedMessage();
-                            Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG).show();
-                            Log.e(TAG, "Error de conexión", t);
-                        }
-                    });
-        }
+        Log.d(TAG, "Categoría seleccionada: '" + categoriaSeleccionada + "'");
+        fetchVideos();
     }
+
+    private void fetchVideos() {
+        ApiService api = RetrofitClient.getApiService();
+        Call<List<Video>> call;
+
+        if (categoriaSeleccionada == null || categoriaSeleccionada.isEmpty()) {
+            call = api.getAllVideos();
+        } else {
+            call = api.getVideosByCategory(categoriaSeleccionada);
+        }
+
+        call.enqueue(new Callback<List<Video>>() {
+            @Override
+            public void onResponse(Call<List<Video>> call, Response<List<Video>> resp) {
+                if (resp.isSuccessful() && resp.body() != null) {
+                    List<Video> videos = resp.body();
+                    adapter = new VideoAdapter(MainActivity.this, videos);
+                    recyclerView.setAdapter(adapter);
+                } else {
+                    String err = "Error carga videos: " + resp.code();
+                    Toast.makeText(MainActivity.this, err, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, err);
+                }
+            }
+            @Override
+            public void onFailure(Call<List<Video>> call, Throwable t) {
+                String err = "Fallo de conexión: " + t.getMessage();
+                Toast.makeText(MainActivity.this, err, Toast.LENGTH_LONG).show();
+                Log.e(TAG, err, t);
+            }
+        });
+    }
+}

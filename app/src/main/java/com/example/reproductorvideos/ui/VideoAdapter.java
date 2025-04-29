@@ -7,11 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.VideoView;
-import com.example.reproductorvideos.R;
 
-
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.reproductorvideos.R;
 import com.example.reproductorvideos.model.Video;
 
 import java.util.List;
@@ -26,25 +26,24 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         this.videoList = videoList;
     }
 
+    @NonNull
     @Override
-    public VideoViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Infla el layout personalizado para cada item
+    public VideoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.video_item, parent, false);
         return new VideoViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(VideoViewHolder holder, int position) {
-        // Obtiene el video actual de la lista
+    public void onBindViewHolder(@NonNull VideoViewHolder holder, int position) {
         Video video = videoList.get(position);
+        holder.titleTextView.setText(video.getTitle());
 
-        // Asigna el título del video al TextView
-        holder.textView.setText(video.getTitle());
-
-        // Asigna la URL del video al VideoView y comienza la reproducción
-        Uri videoUri = Uri.parse(video.getUrl());  // Se obtiene la URL del video
-        holder.videoView.setVideoURI(videoUri);
-        holder.videoView.start();  // Comienza a reproducir el video
+        // Configura el VideoView
+        holder.videoView.setVideoURI(Uri.parse(video.getUrl()));
+        holder.videoView.setOnPreparedListener(mp -> {
+            mp.setLooping(true);
+            holder.videoView.start();
+        });
     }
 
     @Override
@@ -52,15 +51,14 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         return videoList.size();
     }
 
-    // ViewHolder para cada item del RecyclerView
     public static class VideoViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        TextView titleTextView;
         VideoView videoView;
 
-        public VideoViewHolder(View itemView) {
+        public VideoViewHolder(@NonNull View itemView) {
             super(itemView);
-            textView = itemView.findViewById(R.id.videoTitle);  // Asigna el TextView
-            videoView = itemView.findViewById(R.id.videoView);  // Asigna el VideoView
+            titleTextView = itemView.findViewById(R.id.videoTitle);
+            videoView = itemView.findViewById(R.id.videoView);
         }
     }
 }

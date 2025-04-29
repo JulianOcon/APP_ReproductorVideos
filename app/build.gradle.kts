@@ -74,5 +74,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
 
+    implementation("com.android.volley:volley:1.2.1")
+
 }
 

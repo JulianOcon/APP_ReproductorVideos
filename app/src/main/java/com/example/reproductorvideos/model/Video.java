@@ -1,6 +1,9 @@
 package com.example.reproductorvideos.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Video {
+    @SerializedName("titulo")
     private String title;  // Asegúrate de tener un campo 'title'
     private String url;    // Ejemplo de otro campo
 
