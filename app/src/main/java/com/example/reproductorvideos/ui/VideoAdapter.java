@@ -33,16 +33,15 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         View view = LayoutInflater.from(context).inflate(R.layout.video_item, parent, false);
         return new VideoViewHolder(view);
     }
-
     @Override
     public void onBindViewHolder(@NonNull VideoViewHolder holder, int position) {
         Video video = videoList.get(position);
         holder.titleTextView.setText(video.getTitle());
 
-        // Cargar miniatura con Glide
+        // Cargar miniatura con Glide desde el servidor
         Glide.with(context)
-                .load(video.getThumbnail())
-                .placeholder(R.drawable.placeholder) // Opcional: imagen por defecto
+                .load(video.getThumbnailUrl()) // ← CORREGIDO
+                .placeholder(R.drawable.placeholder) // Opcional
                 .into(holder.thumbnailImage);
 
         // Al hacer clic, abrir nueva actividad para reproducir el video
@@ -51,6 +50,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             intent.putExtra("video_url", video.getUrl());
             context.startActivity(intent);
         });
+    }
+
+    public void updateData(List<Video> nuevosVideos) {
+        videoList.clear();
+        videoList.addAll(nuevosVideos);
+        notifyDataSetChanged();
     }
 
     @Override

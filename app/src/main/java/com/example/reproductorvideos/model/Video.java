@@ -4,36 +4,40 @@ import com.google.gson.annotations.SerializedName;
 
 public class Video {
     @SerializedName("titulo")
-    private String title;  // Asegúrate de tener un campo 'title'
-    private String url;    // Ejemplo de otro campo
-    private String thumbnail;
+    private String title;
 
-    // Constructor
-    public Video(String title, String url) {
+    @SerializedName("url")
+    private String url;
+
+    @SerializedName("thumbnail")
+    private String thumbnailUrl;
+
+    @SerializedName("fecha")
+    private long fecha;
+
+
+
+    public Video(String title, String url, String thumbnailUrl, long fecha) {
         this.title = title;
         this.url = url;
+        this.thumbnailUrl = thumbnailUrl;
+        this.fecha = fecha;
     }
 
-    public String getThumbnail() {
-        return thumbnail;
-    }
-
-    // Getter para el título
     public String getTitle() {
         return title;
     }
 
-    // Setter para el título (si lo necesitas)
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    // Getter y Setter para otros campos si es necesario
     public String getUrl() {
         return url;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
     }
+
+    public long getFecha() {
+        return fecha;
+    }
+
 }

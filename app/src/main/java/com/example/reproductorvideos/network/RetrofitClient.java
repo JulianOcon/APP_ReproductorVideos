@@ -7,16 +7,22 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 public class RetrofitClient {
     private static Retrofit retrofit = null;
-    private static String BASE_URL = "http://192.168.1.18:3000/api/"; // valor por defecto
+    private static String BASE_URL = "http://10.20.106.75:3000/api/"; // valor por defecto
 
-    // Este método te permitirá cambiar la URL en tiempo de ejecución
+    // Permite cambiar la URL en tiempo de ejecución
     public static void setBaseUrl(String url) {
-        BASE_URL = url;
-        retrofit = null; // Forzar recrear Retrofit con nueva URL
+        if (url != null && !url.isEmpty()) {
+            BASE_URL = url.endsWith("/") ? url : url + "/";
+            retrofit = null; // Forzar recrear Retrofit
+        }
     }
 
     private static Retrofit getRetrofitInstance() {
         if (retrofit == null) {
+            if (BASE_URL == null || BASE_URL.isEmpty()) {
+                throw new IllegalStateException("❌ BASE_URL no puede ser null o vacía");
+            }
+
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 

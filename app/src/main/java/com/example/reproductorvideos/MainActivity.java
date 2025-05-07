@@ -13,7 +13,7 @@ import com.example.reproductorvideos.network.RetrofitClient;
 import com.example.reproductorvideos.network.ApiService;
 import com.example.reproductorvideos.network.ServerInfo;
 import com.example.reproductorvideos.ui.VideoAdapter;
-import java.io.IOException;
+
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,14 +43,14 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Categoría seleccionada: '" + categoriaSeleccionada + "'");
 
-        // 👉 PASO NUEVO: Obtener la IP dinámica antes de cargar videos
+        // 👉 Obtener IP del servidor antes de cargar videos
         obtenerUrlDelServidor();
     }
 
     private void obtenerUrlDelServidor() {
-        // Este Retrofit temporal apunta a una IP "semifija"
+        // Retrofit temporal para consultar la IP pública
         Retrofit retrofitTemporal = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.18:3000/api/") // 🚨 Debe coincidir con tu servidor
+                .baseUrl("http://10.20.106.75:3000/api/") // Dirección por defecto temporal
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -59,14 +59,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ServerInfo> call, Response<ServerInfo> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String url = response.body().url;
+                    String ip = response.body().getIpPublica();
+                    String url = "http://" + ip + ":3000/api/";
                     Log.d(TAG, "✅ IP del servidor obtenida: " + url);
 
-                    // Actualizar Retrofit con la nueva IP dinámica
-                    RetrofitClient.setBaseUrl(url);
-
-                    // Ahora sí cargar videos
-                    fetchVideos();
+                    RetrofitClient.setBaseUrl(url); // actualiza baseUrl dinámica
+                    fetchVideos(); // luego carga los videos
                 } else {
                     Toast.makeText(MainActivity.this, "No se pudo obtener la IP del servidor", Toast.LENGTH_LONG).show();
                     Log.e(TAG, "❌ Falló obtener IP: " + response.code());
@@ -80,8 +78,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-
 
     private void fetchVideos() {
         ApiService api = RetrofitClient.getApiService();
@@ -106,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, err);
                 }
             }
+
             @Override
             public void onFailure(Call<List<Video>> call, Throwable t) {
                 String err = "Fallo de conexión: " + t.getMessage();

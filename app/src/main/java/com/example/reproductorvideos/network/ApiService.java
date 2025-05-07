@@ -18,5 +18,8 @@ public interface ApiService {
     // Traer los videos de una categoría específica
     @GET("videos/{categoria}")
     Call<List<Video>> getVideosByCategory(@Path("categoria") String categoria);
+    @GET("videos")
+    Call<List<Video>> obtenerVideos();
 
 }
+

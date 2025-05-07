@@ -3,8 +3,9 @@
 <resources>
 
     <!-- Tema personalizado que hereda de Theme.AppCompat -->
-    <style name="Theme.ReproductorVideos" parent="Theme.AppCompat.Light">
-        <!-- Personaliza el tema aquí -->
+    <style name="Theme.ReproductorVideos" parent="Theme.AppCompat.Light.NoActionBar">
+
+    <!-- Personaliza el tema aquí -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>

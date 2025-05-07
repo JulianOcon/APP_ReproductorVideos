@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp">
+    android:background="@drawable/gradient_background"
+    tools:context=".MainActivity">
 
-    <!-- Barra de progreso mientras se cargan los videos -->
+    <!-- Toolbar estilo YouTube -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:gravity="center_vertical"
+        android:background="#121212">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_launcher_foreground"
+            android:contentDescription="Logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Red Lucia"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:layout_marginStart="8dp" />
+
+        <EditText
+            android:id="@+id/searchEditText"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:hint="Buscar"
+            android:padding="8dp"
+            android:background="@android:drawable/edit_text"
+            android:drawableStart="@android:drawable/ic_menu_search"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#AAAAAA" />
+    </LinearLayout>
+
+    <!-- Barra de progreso -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -13,25 +52,14 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
-    <!-- Caja de búsqueda -->
-    <EditText
-        android:id="@+id/searchEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Buscar video..."
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text"
-        android:drawableStart="@android:drawable/ic_menu_search"
-        android:inputType="text"
-        android:layout_marginBottom="8dp"/>
-
-    <!-- RecyclerView para mostrar los videos -->
+    <!-- RecyclerView de videos -->
+    <!-- RecyclerView de videos -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="8dp"
-        android:contentDescription="Lista de videos disponibles" />
-
+        android:contentDescription="Lista de videos"
+        tools:listitem="@layout/video_item" />
 </LinearLayout>
