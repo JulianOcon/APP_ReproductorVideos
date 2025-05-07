@@ -1,18 +1,19 @@
 package com.example.reproductorvideos.ui;
 
 import android.content.Context;
-import android.net.Uri;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.bumptech.glide.Glide;
 import com.example.reproductorvideos.R;
 import com.example.reproductorvideos.model.Video;
+import com.example.reproductorvideos.ReproducirActivity;
 
 import java.util.List;
 
@@ -38,11 +39,17 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         Video video = videoList.get(position);
         holder.titleTextView.setText(video.getTitle());
 
-        // Configura el VideoView
-        holder.videoView.setVideoURI(Uri.parse(video.getUrl()));
-        holder.videoView.setOnPreparedListener(mp -> {
-            mp.setLooping(true);
-            holder.videoView.start();
+        // Cargar miniatura con Glide
+        Glide.with(context)
+                .load(video.getThumbnail())
+                .placeholder(R.drawable.placeholder) // Opcional: imagen por defecto
+                .into(holder.thumbnailImage);
+
+        // Al hacer clic, abrir nueva actividad para reproducir el video
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ReproducirActivity.class);
+            intent.putExtra("video_url", video.getUrl());
+            context.startActivity(intent);
         });
     }
 
@@ -53,12 +60,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
 
     public static class VideoViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
-        VideoView videoView;
+        ImageView thumbnailImage;
 
         public VideoViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.videoTitle);
-            videoView = itemView.findViewById(R.id.videoView);
+            thumbnailImage = itemView.findViewById(R.id.thumbnailImage);
         }
     }
 }

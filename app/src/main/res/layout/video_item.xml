@@ -1,31 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/videoCard"
+<!-- res/layout/video_item.xml -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:layout_margin="8dp"
-    android:padding="16dp"
-    android:background="@drawable/bg_rounded"
-    android:elevation="6dp">
+    card_view:cardCornerRadius="16dp"
+    card_view:cardElevation="6dp">
 
-    <!-- Título del video -->
-    <TextView
-        android:id="@+id/videoTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Video Title"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="#333"
-        android:gravity="center"
-        android:paddingBottom="12dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <!-- VideoView para reproducir el video -->
-    <VideoView
-        android:id="@+id/videoView"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="#000"
-        android:layout_marginBottom="8dp"/>
-</LinearLayout>
+        <TextView
+            android:id="@+id/videoTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Título del video"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp"/>
+
+        <ImageView
+            android:id="@+id/thumbnailImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Miniatura del video"/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+
+
+

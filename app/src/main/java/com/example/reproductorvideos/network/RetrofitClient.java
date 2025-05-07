@@ -6,13 +6,20 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 public class RetrofitClient {
-    private static final String BASE_URL = "http://192.168.1.6:3000/api/";
     private static Retrofit retrofit = null;
+    private static String BASE_URL = "http://192.168.1.18:3000/api/"; // valor por defecto
+
+    // Este método te permitirá cambiar la URL en tiempo de ejecución
+    public static void setBaseUrl(String url) {
+        BASE_URL = url;
+        retrofit = null; // Forzar recrear Retrofit con nueva URL
+    }
 
     private static Retrofit getRetrofitInstance() {
         if (retrofit == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
             OkHttpClient client = new OkHttpClient.Builder()
                     .addInterceptor(logging)
                     .build();

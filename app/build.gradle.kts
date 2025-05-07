@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
 }
 
 android {
@@ -75,6 +76,11 @@ dependencies {
     implementation(libs.androidx.recyclerview)
 
     implementation(libs.volley)
+
+    // Glide para cargar imágenes (miniaturas de videos)
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+    kapt("com.github.bumptech.glide:compiler:4.15.1")
+
 
 }
 

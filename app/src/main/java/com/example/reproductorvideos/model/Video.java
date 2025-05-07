@@ -6,11 +6,16 @@ public class Video {
     @SerializedName("titulo")
     private String title;  // Asegúrate de tener un campo 'title'
     private String url;    // Ejemplo de otro campo
+    private String thumbnail;
 
     // Constructor
     public Video(String title, String url) {
         this.title = title;
         this.url = url;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
     }
 
     // Getter para el título
