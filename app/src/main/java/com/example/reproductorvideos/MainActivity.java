@@ -1,20 +1,29 @@
 package com.example.reproductorvideos;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.reproductorvideos.model.Video;
+import com.example.reproductorvideos.network.ApiService;
 import com.example.reproductorvideos.network.IPService;
 import com.example.reproductorvideos.network.RetrofitClient;
-import com.example.reproductorvideos.network.ApiService;
 import com.example.reproductorvideos.network.ServerInfo;
 import com.example.reproductorvideos.ui.VideoAdapter;
 
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -26,16 +35,28 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private VideoAdapter adapter;
     private static final String TAG = "MainActivity";
+    private static final int REQUEST_NOTIFICATION_PERMISSION = 1001;
     private String categoriaSeleccionada;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // ✅ Solicitar permiso de notificaciones si es Android 13 o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_NOTIFICATION_PERMISSION);
+            }
+        }
+
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Recibir la categoría (puede venir vacía)
         Intent intent = getIntent();
         categoriaSeleccionada = intent.hasExtra("categoria")
                 ? intent.getStringExtra("categoria")
@@ -43,14 +64,12 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Categoría seleccionada: '" + categoriaSeleccionada + "'");
 
-        // 👉 Obtener IP del servidor antes de cargar videos
         obtenerUrlDelServidor();
     }
 
     private void obtenerUrlDelServidor() {
-        // Retrofit temporal para consultar la IP pública
         Retrofit retrofitTemporal = new Retrofit.Builder()
-                .baseUrl("http://10.20.106.75:3000/api/") // Dirección por defecto temporal
+                .baseUrl("http://10.20.106.75:3000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -63,8 +82,8 @@ public class MainActivity extends AppCompatActivity {
                     String url = "http://" + ip + ":3000/api/";
                     Log.d(TAG, "✅ IP del servidor obtenida: " + url);
 
-                    RetrofitClient.setBaseUrl(url); // actualiza baseUrl dinámica
-                    fetchVideos(); // luego carga los videos
+                    RetrofitClient.setBaseUrl(url);
+                    fetchVideos();
                 } else {
                     Toast.makeText(MainActivity.this, "No se pudo obtener la IP del servidor", Toast.LENGTH_LONG).show();
                     Log.e(TAG, "❌ Falló obtener IP: " + response.code());
@@ -110,5 +129,20 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, err, t);
             }
         });
+    }
+
+    // ✅ Resultado del permiso de notificación
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "✅ Permiso de notificaciones concedido");
+            } else {
+                Toast.makeText(this, "❌ Permiso de notificaciones denegado", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

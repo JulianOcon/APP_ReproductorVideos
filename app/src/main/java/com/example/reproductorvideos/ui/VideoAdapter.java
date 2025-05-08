@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.example.reproductorvideos.R;
 import com.example.reproductorvideos.model.Video;
@@ -33,22 +34,28 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         View view = LayoutInflater.from(context).inflate(R.layout.video_item, parent, false);
         return new VideoViewHolder(view);
     }
+
     @Override
     public void onBindViewHolder(@NonNull VideoViewHolder holder, int position) {
         Video video = videoList.get(position);
         holder.titleTextView.setText(video.getTitle());
 
-        // Cargar miniatura con Glide desde el servidor
         Glide.with(context)
-                .load(video.getThumbnailUrl()) // ← CORREGIDO
-                .placeholder(R.drawable.placeholder) // Opcional
+                .load(video.getThumbnailUrl())
+                .placeholder(R.drawable.placeholder)
                 .into(holder.thumbnailImage);
 
-        // Al hacer clic, abrir nueva actividad para reproducir el video
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, ReproducirActivity.class);
-            intent.putExtra("video_url", video.getUrl());
-            context.startActivity(intent);
+            if (context instanceof ReproducirActivity) {
+                // Si ya estamos en ReproducirActivity, reproducimos el nuevo video directamente
+                ((ReproducirActivity) context).reproducirNuevoVideo(video.getUrl(), video.getTitle());
+            } else {
+                // Si estamos fuera, iniciamos la actividad como siempre
+                Intent intent = new Intent(context, ReproducirActivity.class);
+                intent.putExtra("video_url", video.getUrl());
+                intent.putExtra("video_titulo", video.getTitle());
+                context.startActivity(intent);
+            }
         });
     }
 
