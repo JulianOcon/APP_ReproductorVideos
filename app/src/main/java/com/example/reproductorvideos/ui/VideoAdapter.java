@@ -80,4 +80,9 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             thumbnailImage = itemView.findViewById(R.id.thumbnailImage);
         }
     }
+
+    public void actualizarLista(List<Video> nuevaLista) {
+        this.videoList = nuevaLista;
+        notifyDataSetChanged();
+    }
 }

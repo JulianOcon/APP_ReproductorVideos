@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +25,7 @@ import com.example.reproductorvideos.network.RetrofitClient;
 import com.example.reproductorvideos.network.ServerInfo;
 import com.example.reproductorvideos.ui.VideoAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -37,11 +41,29 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int REQUEST_NOTIFICATION_PERMISSION = 1001;
     private String categoriaSeleccionada;
+    private EditText searchEditText;
+    private List<Video> videoListOriginal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        searchEditText = findViewById(R.id.searchEditText);
+
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filtrarVideos(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
 
         // ✅ Solicitar permiso de notificaciones si es Android 13 o superior
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -69,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void obtenerUrlDelServidor() {
         Retrofit retrofitTemporal = new Retrofit.Builder()
-                .baseUrl("http://10.20.106.75:3000/api/")
+                .baseUrl("http://192.168.1.12:3000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -112,8 +134,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Video>> call, Response<List<Video>> resp) {
                 if (resp.isSuccessful() && resp.body() != null) {
-                    List<Video> videos = resp.body();
-                    adapter = new VideoAdapter(MainActivity.this, videos);
+                    videoListOriginal = resp.body(); // Guarda la lista sin filtrar
+                    adapter = new VideoAdapter(MainActivity.this, new ArrayList<>(videoListOriginal));
                     recyclerView.setAdapter(adapter);
                 } else {
                     String err = "Error carga videos: " + resp.code();
@@ -144,5 +166,18 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "❌ Permiso de notificaciones denegado", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private void filtrarVideos(String query) {
+        if (videoListOriginal == null || adapter == null) return;
+
+        List<Video> filtrados = new ArrayList<>();
+        for (Video video : videoListOriginal) {
+            if (video.getTitle().toLowerCase().contains(query.toLowerCase())) {
+                filtrados.add(video);
+            }
+        }
+
+        adapter.actualizarLista(filtrados);
     }
 }

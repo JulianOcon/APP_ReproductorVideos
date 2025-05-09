@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Binder;
 import android.os.Build;
@@ -16,6 +17,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
@@ -89,7 +91,7 @@ public class MediaPlaybackService extends Service {
                     String nuevoTitulo = String.valueOf(mediaItem.mediaMetadata.title);
                     Intent intent = new Intent(ACTION_VIDEO_CHANGED);
                     intent.putExtra(EXTRA_VIDEO_TITLE, nuevoTitulo);
-                    sendBroadcast(intent);
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
                     Log.d("ExoPlayer", "🎬 Nuevo video: " + nuevoTitulo);
                 }
             }
@@ -124,18 +126,8 @@ public class MediaPlaybackService extends Service {
                         if (player.getCurrentMediaItem() != null &&
                                 player.getCurrentMediaItem().localConfiguration != null) {
                             String videoUrl = player.getCurrentMediaItem().localConfiguration.uri.toString();
-                            Glide.with(getApplicationContext())
-                                    .asBitmap()
-                                    .load(videoUrl)
-                                    .into(new CustomTarget<Bitmap>() {
-                                        @Override
-                                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                            callback.onBitmap(resource);
-                                        }
+                            return BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
 
-                                        @Override
-                                        public void onLoadCleared(@Nullable Drawable placeholder) {}
-                                    });
                         }
                         return null;
                     }
@@ -143,7 +135,7 @@ public class MediaPlaybackService extends Service {
                 .build();
 
         // Habilitar solo el botón de reproducir/pausar (no hay lista para "Siguiente")
-        notificationManager.setUseNextAction(false);
+        notificationManager.setUseNextAction(true);
         notificationManager.setPlayer(exoPlayer);
 
         startForeground(NOTIFICATION_ID, buildDummyNotification());

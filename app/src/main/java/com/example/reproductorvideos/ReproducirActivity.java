@@ -3,7 +3,9 @@ package com.example.reproductorvideos;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -11,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -164,4 +167,28 @@ public class ReproducirActivity extends AppCompatActivity {
             serviceBound = false;
         }
     }
+
+    private final android.content.BroadcastReceiver videoChangeReceiver = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (MediaPlaybackService.ACTION_VIDEO_CHANGED.equals(intent.getAction())) {
+                String nuevoTitulo = intent.getStringExtra(MediaPlaybackService.EXTRA_VIDEO_TITLE);
+                videoTitle.setText(nuevoTitulo);
+            }
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver(videoChangeReceiver, new IntentFilter(MediaPlaybackService.ACTION_VIDEO_CHANGED));
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(videoChangeReceiver);
+    }
+
 }

@@ -12,13 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="10dp"
+        android:padding="12dp"
         android:gravity="center_vertical"
-        android:background="#121212">
+        android:background="#1E1E1E"
+        android:elevation="4dp">
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:src="@drawable/ic_launcher_foreground"
             android:contentDescription="Logo" />
 
@@ -27,17 +28,18 @@
             android:layout_height="wrap_content"
             android:text="Red Lucia"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:layout_marginStart="8dp" />
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp" />
 
         <EditText
             android:id="@+id/searchEditText"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
             android:hint="Buscar"
-            android:padding="8dp"
+            android:padding="10dp"
             android:background="@android:drawable/edit_text"
             android:drawableStart="@android:drawable/ic_menu_search"
             android:textColor="#FFFFFF"
@@ -50,7 +52,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="gone" />
+        android:visibility="gone"
+        style="?android:attr/progressBarStyleLarge"
+        android:indeterminateTint="#FF4081" />
 
     <!-- RecyclerView de videos -->
     <!-- RecyclerView de videos -->
@@ -60,6 +64,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="8dp"
+        android:clipToPadding="false"
         android:contentDescription="Lista de videos"
-        tools:listitem="@layout/video_item" />
+        tools:listitem="@layout/video_item"
+        android:paddingBottom="16dp"/>
 </LinearLayout>

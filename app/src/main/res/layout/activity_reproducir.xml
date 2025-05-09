@@ -5,8 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212"
-    android:padding="8dp">
+    android:padding="12dp">
 
+    <!-- Reproductor de video -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
@@ -16,23 +17,31 @@
         app:use_controller="true"
         app:show_buffering="when_playing"
         app:show_previous_button="true"
-        app:show_next_button="true" />
+        app:show_next_button="true"
+        app:resize_mode="fit" />
 
+    <!-- Título del video -->
     <TextView
         android:id="@+id/videoTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Título del video"
         android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:paddingTop="8dp" />
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingTop="12dp"
+        android:paddingBottom="8dp"
+        android:maxLines="2"
+        android:ellipsize="end" />
 
+    <!-- Lista de recomendados -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewRecomendados"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="8dp"
+        android:paddingTop="4dp"
+        android:clipToPadding="false"
         android:contentDescription="Videos recomendados" />
 
 </LinearLayout>
