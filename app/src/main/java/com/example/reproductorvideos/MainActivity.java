@@ -8,7 +8,12 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -36,12 +41,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
-    private VideoAdapter adapter;
     private static final String TAG = "MainActivity";
     private static final int REQUEST_NOTIFICATION_PERMISSION = 1001;
-    private String categoriaSeleccionada;
+
+    private RecyclerView recyclerView;
+    private VideoAdapter adapter;
     private EditText searchEditText;
+    private ImageView logoImageView;
+
+    private String categoriaSeleccionada;
     private List<Video> videoListOriginal;
 
     @Override
@@ -49,27 +57,42 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        logoImageView = findViewById(R.id.logoImageView);
         searchEditText = findViewById(R.id.searchEditText);
 
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        logoImageView.setOnClickListener(v -> {
+            View popupView = LayoutInflater.from(this).inflate(R.layout.popup_logout, null);
+            PopupWindow popupWindow = new PopupWindow(popupView,
+                    RecyclerView.LayoutParams.WRAP_CONTENT,
+                    RecyclerView.LayoutParams.WRAP_CONTENT,
+                    true);
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filtrarVideos(s.toString());
-            }
+            popupWindow.setElevation(12);
+            popupWindow.setOutsideTouchable(true);
+            popupWindow.setBackgroundDrawable(null); // fondo transparente
 
-            @Override
-            public void afterTextChanged(Editable s) {}
+            popupWindow.showAsDropDown(logoImageView, 0, 10);
+
+            TextView btnCerrarSesion = popupView.findViewById(R.id.btnCerrarSesion);
+            btnCerrarSesion.setOnClickListener(view -> {
+                Toast.makeText(MainActivity.this, "Cerrando sesión...", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                finish();
+                popupWindow.dismiss();
+            });
         });
 
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filtrarVideos(s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
 
-        // ✅ Solicitar permiso de notificaciones si es Android 13 o superior
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
-
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.POST_NOTIFICATIONS},
                         REQUEST_NOTIFICATION_PERMISSION);
@@ -85,13 +108,12 @@ public class MainActivity extends AppCompatActivity {
                 : "";
 
         Log.d(TAG, "Categoría seleccionada: '" + categoriaSeleccionada + "'");
-
         obtenerUrlDelServidor();
     }
 
     private void obtenerUrlDelServidor() {
         Retrofit retrofitTemporal = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.12:3000/api/")
+                .baseUrl("http://10.20.106.81:3000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -103,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
                     String ip = response.body().getIpPublica();
                     String url = "http://" + ip + ":3000/api/";
                     Log.d(TAG, "✅ IP del servidor obtenida: " + url);
-
                     RetrofitClient.setBaseUrl(url);
                     fetchVideos();
                 } else {
@@ -122,19 +143,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchVideos() {
         ApiService api = RetrofitClient.getApiService();
-        Call<List<Video>> call;
-
-        if (categoriaSeleccionada == null || categoriaSeleccionada.isEmpty()) {
-            call = api.getAllVideos();
-        } else {
-            call = api.getVideosByCategory(categoriaSeleccionada);
-        }
+        Call<List<Video>> call = (categoriaSeleccionada == null || categoriaSeleccionada.isEmpty())
+                ? api.obtenerVideos()
+                : api.getVideosByCategory(categoriaSeleccionada);
 
         call.enqueue(new Callback<List<Video>>() {
             @Override
             public void onResponse(Call<List<Video>> call, Response<List<Video>> resp) {
                 if (resp.isSuccessful() && resp.body() != null) {
-                    videoListOriginal = resp.body(); // Guarda la lista sin filtrar
+                    videoListOriginal = resp.body();
                     adapter = new VideoAdapter(MainActivity.this, new ArrayList<>(videoListOriginal));
                     recyclerView.setAdapter(adapter);
                 } else {
@@ -153,12 +170,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // ✅ Resultado del permiso de notificación
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "✅ Permiso de notificaciones concedido");
@@ -170,14 +185,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void filtrarVideos(String query) {
         if (videoListOriginal == null || adapter == null) return;
-
         List<Video> filtrados = new ArrayList<>();
         for (Video video : videoListOriginal) {
             if (video.getTitle().toLowerCase().contains(query.toLowerCase())) {
                 filtrados.add(video);
             }
         }
-
         adapter.actualizarLista(filtrados);
     }
 }

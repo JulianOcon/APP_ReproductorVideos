@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/logoutPopup"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#B3000000"
+    android:padding="12dp"
+    android:elevation="10dp"
+    android:layout_gravity="center">
+
+<TextView
+android:id="@+id/btnCerrarSesion"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="Cerrar sesión"
+android:textColor="#2196F3"
+android:textSize="18sp"
+android:background="?attr/selectableItemBackground"
+android:padding="8dp" />
+</LinearLayout>

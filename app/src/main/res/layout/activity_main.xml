@@ -7,7 +7,7 @@
     android:background="@drawable/gradient_background"
     tools:context=".MainActivity">
 
-    <!-- Toolbar estilo YouTube -->
+    <!-- Encabezado con ícono y barra de búsqueda -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,25 +18,20 @@
         android:elevation="4dp">
 
         <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_launcher_foreground"
-            android:contentDescription="Logo" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Red Lucia"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginStart="12dp" />
+            android:id="@+id/logoImageView"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/icredlucia"
+            android:contentDescription="Logo"
+            android:layout_marginEnd="16dp"
+            android:clickable="true"
+            android:focusable="true" />
 
         <EditText
             android:id="@+id/searchEditText"
             android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="16dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:layout_weight="1"
             android:hint="Buscar"
             android:padding="10dp"
@@ -56,8 +51,7 @@
         style="?android:attr/progressBarStyleLarge"
         android:indeterminateTint="#FF4081" />
 
-    <!-- RecyclerView de videos -->
-    <!-- RecyclerView de videos -->
+    <!-- Lista de videos -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -67,5 +61,5 @@
         android:clipToPadding="false"
         android:contentDescription="Lista de videos"
         tools:listitem="@layout/video_item"
-        android:paddingBottom="16dp"/>
+        android:paddingBottom="16dp" />
 </LinearLayout>
