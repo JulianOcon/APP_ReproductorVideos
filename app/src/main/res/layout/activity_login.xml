@@ -1,55 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
-    android:background="#121212">
+    android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/etUsuario"
+    <!-- Fondo azul y contenido -->
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Número de teléfono"
-        android:inputType="phone"
-        android:textColorHint="#888888"
-        android:textColor="#FFFFFF"
-        android:background="@android:drawable/edit_text"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="match_parent"
+        android:background="#1A237E"
+        android:padding="24dp"
+        android:gravity="top|center_horizontal">
 
-    <EditText
-        android:id="@+id/etContrasena"
+        <!-- Ícono -->
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="128dp"
+            android:layout_height="128dp"
+            android:src="@drawable/icredlucia"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LOGIN"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Número de teléfono -->
+        <EditText
+            android:id="@+id/etUsuario"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Número de teléfono"
+            android:inputType="phone"
+            android:background="@drawable/bg_edittext"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#BDBDBD"
+            android:paddingHorizontal="16dp"
+            android:elevation="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Contraseña -->
+        <EditText
+            android:id="@+id/etContrasena"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Contraseña"
+            android:inputType="textPassword"
+            android:background="@drawable/bg_edittext"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#BDBDBD"
+            android:paddingHorizontal="16dp"
+            android:elevation="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Botón LOGIN -->
+        <Button
+            android:id="@+id/btnIniciarSesion"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="LOGIN"
+            android:textColor="#1A237E"
+            android:backgroundTint="#FFFFFF"
+            android:layout_marginTop="20dp" />
+
+        <!-- Link de registro accesible -->
+        <TextView
+            android:id="@+id/tvIrARegistro"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingHorizontal="12dp"
+            android:text="Regístrate Aquí"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:layout_marginTop="24dp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <!-- Capa blanca inferior en diagonal -->
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Contraseña"
-        android:textColorHint="#888888"
-        android:textColor="#FFFFFF"
-        android:inputType="textPassword"
-        android:background="@android:drawable/edit_text"
-        android:layout_marginBottom="24dp" />
+        android:layout_height="160dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_diagonal" />
 
-    <Button
-        android:id="@+id/btnIniciarSesion"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Iniciar sesión" />
-
+    <!-- Texto de Términos -->
     <TextView
-        android:id="@+id/tvIrARegistro"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:minWidth="48dp"
-        android:text="¿No tienes cuenta? Regístrate aquí"
-        android:textColor="#00BFFF"
+        android:text="Terms &amp; Conditions"
+        android:textColor="#888888"
         android:textSize="14sp"
-        android:gravity="center"
-        android:layout_marginTop="16dp"
-        android:padding="12dp"
-        android:clickable="true"
-        android:focusable="true" />
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp" />
 
 
-
-</LinearLayout>
+</FrameLayout>
