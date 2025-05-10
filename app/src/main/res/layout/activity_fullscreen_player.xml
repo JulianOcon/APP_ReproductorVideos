@@ -21,7 +21,7 @@
         android:layout_margin="16dp"
         android:background="@android:color/transparent"
         android:contentDescription="Salir de pantalla completa"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:src="@drawable/ic_fullscreen_exit"
         app:tint="@android:color/white" />
 </FrameLayout>
 

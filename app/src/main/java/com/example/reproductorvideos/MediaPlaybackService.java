@@ -9,13 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media3.common.MediaItem;
@@ -25,9 +23,6 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerNotificationManager;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.example.reproductorvideos.model.Video;
 
 import java.util.ArrayList;
@@ -39,10 +34,6 @@ public class MediaPlaybackService extends Service {
 
     public static final String ACTION_VIDEO_CHANGED = "com.example.reproductorvideos.VIDEO_CHANGED";
     public static final String EXTRA_VIDEO_TITLE = "video_title";
-
-    public interface VideoChangeCallback {
-        void onVideoChanged(String url, String titulo);
-    }
 
     private static final String CHANNEL_ID = "video_channel";
     private static final int NOTIFICATION_ID = 1;
@@ -56,6 +47,11 @@ public class MediaPlaybackService extends Service {
     private VideoChangeCallback callback;
 
     private static MediaPlaybackService instance;
+    private boolean notificacionInicializada = false;
+
+    public interface VideoChangeCallback {
+        void onVideoChanged(String url, String titulo);
+    }
 
     public class LocalBinder extends Binder {
         public MediaPlaybackService getService() {
@@ -70,7 +66,7 @@ public class MediaPlaybackService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID, "Reproducción de video", NotificationManager.IMPORTANCE_HIGH
+                    CHANNEL_ID, "Reproducción de video", NotificationManager.IMPORTANCE_LOW
             );
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             getSystemService(NotificationManager.class).createNotificationChannel(channel);
@@ -100,48 +96,44 @@ public class MediaPlaybackService extends Service {
             }
         });
 
-        // Configurar notificación
-        notificationManager = new PlayerNotificationManager.Builder(this, NOTIFICATION_ID, CHANNEL_ID)
-                .setMediaDescriptionAdapter(new PlayerNotificationManager.MediaDescriptionAdapter() {
-                    @Override
-                    public CharSequence getCurrentContentTitle(Player player) {
-                        return player.getMediaMetadata().title != null
-                                ? player.getMediaMetadata().title.toString()
-                                : "Reproduciendo";
-                    }
-
-                    @Nullable
-                    @Override
-                    public PendingIntent createCurrentContentIntent(Player player) {
-                        Intent intent = new Intent(MediaPlaybackService.this, ReproducirActivity.class);
-                        return PendingIntent.getActivity(MediaPlaybackService.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-                    }
-
-                    @Nullable
-                    @Override
-                    public CharSequence getCurrentContentText(Player player) {
-                        return "Video";
-                    }
-
-                    @Nullable
-                    @Override
-                    public Bitmap getCurrentLargeIcon(Player player, PlayerNotificationManager.BitmapCallback callback) {
-                        if (player.getCurrentMediaItem() != null &&
-                                player.getCurrentMediaItem().localConfiguration != null) {
-                            String videoUrl = player.getCurrentMediaItem().localConfiguration.uri.toString();
-                            return BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
-
+        // ✅ Notificación SOLO UNA VEZ
+        if (!notificacionInicializada) {
+            notificationManager = new PlayerNotificationManager.Builder(this, NOTIFICATION_ID, CHANNEL_ID)
+                    .setMediaDescriptionAdapter(new PlayerNotificationManager.MediaDescriptionAdapter() {
+                        @Override
+                        public CharSequence getCurrentContentTitle(Player player) {
+                            return player.getMediaMetadata().title != null
+                                    ? player.getMediaMetadata().title.toString()
+                                    : "Reproduciendo";
                         }
-                        return null;
-                    }
-                })
-                .build();
 
-        // Habilitar solo el botón de reproducir/pausar (no hay lista para "Siguiente")
-        notificationManager.setUseNextAction(true);
-        notificationManager.setPlayer(exoPlayer);
+                        @Nullable
+                        @Override
+                        public PendingIntent createCurrentContentIntent(Player player) {
+                            Intent intent = new Intent(MediaPlaybackService.this, ReproducirActivity.class);
+                            return PendingIntent.getActivity(MediaPlaybackService.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                        }
 
-        startForeground(NOTIFICATION_ID, buildDummyNotification());
+                        @Nullable
+                        @Override
+                        public CharSequence getCurrentContentText(Player player) {
+                            return "Video";
+                        }
+
+                        @Nullable
+                        @Override
+                        public Bitmap getCurrentLargeIcon(Player player, PlayerNotificationManager.BitmapCallback callback) {
+                            return BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
+                        }
+                    })
+                    .build();
+
+            notificationManager.setUseNextAction(true);
+            notificationManager.setPlayer(exoPlayer);
+            notificacionInicializada = true;
+
+            startForeground(NOTIFICATION_ID, buildDummyNotification());
+        }
     }
 
     private Notification buildDummyNotification() {
@@ -149,7 +141,8 @@ public class MediaPlaybackService extends Service {
                 ? new Notification.Builder(this, CHANNEL_ID)
                 : new Notification.Builder(this);
 
-        return builder.setContentTitle("Reproducción en curso")
+        return builder
+                .setContentTitle("Reproducción en curso")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .build();
     }
@@ -169,7 +162,7 @@ public class MediaPlaybackService extends Service {
 
             List<MediaItem> mediaItems = new ArrayList<>();
 
-            // 1. Agrega el video actual
+            // Video actual
             MediaItem currentItem = new MediaItem.Builder()
                     .setUri(videoUrl)
                     .setMediaMetadata(new MediaMetadata.Builder()
@@ -178,7 +171,7 @@ public class MediaPlaybackService extends Service {
                     .build();
             mediaItems.add(currentItem);
 
-            // 2. Agrega los recomendados (excepto el actual)
+            // Recomendados
             for (Video video : listaVideos) {
                 if (!video.getUrl().equals(videoUrl)) {
                     MediaItem item = new MediaItem.Builder()
@@ -191,13 +184,11 @@ public class MediaPlaybackService extends Service {
                 }
             }
 
-            // 3. Reproducir como lista real
-            exoPlayer.setMediaItems(mediaItems, /* startIndex */ 0, /* startPositionMs */ 0);
+            exoPlayer.setMediaItems(mediaItems, 0, 0);
             exoPlayer.prepare();
             exoPlayer.play();
         }
     }
-
 
     public void reproducirSiguienteAleatorio() {
         if (listaVideos != null && !listaVideos.isEmpty()) {
@@ -213,8 +204,6 @@ public class MediaPlaybackService extends Service {
             if (callback != null) {
                 callback.onVideoChanged(videoAleatorio.getUrl(), videoAleatorio.getTitle());
             }
-        } else {
-            Log.w("MediaService", "⚠ Lista de videos vacía o no inicializada.");
         }
     }
 
@@ -222,18 +211,13 @@ public class MediaPlaybackService extends Service {
         return exoPlayer;
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public static MediaPlaybackService getInstance() {
+        return instance;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
-    }
-
-    public static MediaPlaybackService getInstance() {
-        return instance;
     }
 }
