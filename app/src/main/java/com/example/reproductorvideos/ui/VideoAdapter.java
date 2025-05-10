@@ -20,7 +20,7 @@ import java.util.List;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHolder> {
 
-    private Context context;
+    private final Context context;
     private List<Video> videoList;
 
     public VideoAdapter(Context context, List<Video> videoList) {
@@ -47,10 +47,9 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
 
         holder.itemView.setOnClickListener(v -> {
             if (context instanceof ReproducirActivity) {
-                // Si ya estamos en ReproducirActivity, reproducimos el nuevo video directamente
+                // Método reproducirNuevoVideo debe ser público en ReproducirActivity
                 ((ReproducirActivity) context).reproducirNuevoVideo(video.getUrl(), video.getTitle());
             } else {
-                // Si estamos fuera, iniciamos la actividad como siempre
                 Intent intent = new Intent(context, ReproducirActivity.class);
                 intent.putExtra("video_url", video.getUrl());
                 intent.putExtra("video_titulo", video.getTitle());
@@ -67,7 +66,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
 
     @Override
     public int getItemCount() {
-        return videoList.size();
+        return videoList != null ? videoList.size() : 0;
     }
 
     public static class VideoViewHolder extends RecyclerView.ViewHolder {

@@ -95,6 +95,9 @@ dependencies {
     implementation (libs.androidx.media3.exoplayer.v111)
     implementation (libs.androidx.media3.ui.v111)
 
+    implementation (libs.media3.ui.v131)
+
+
 
 
 }
