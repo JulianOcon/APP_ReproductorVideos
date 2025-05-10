@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.provider.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -47,7 +48,9 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            LoginRequest request = new LoginRequest(usuario, contrasena);
+            String dispositivoHash = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+            LoginRequest request = new LoginRequest(usuario, contrasena, dispositivoHash);
+
             ApiService api = RetrofitClient.getApiService();
 
             api.login(request).enqueue(new Callback<LoginResponse>() {

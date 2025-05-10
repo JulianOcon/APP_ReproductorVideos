@@ -18,15 +18,18 @@
         android:theme="@style/Theme.ReproductorVideos"
         android:networkSecurityConfig="@xml/network_security_config">
 
-        <!-- 🟢 LoginActivity será la pantalla de inicio -->
+        <!-- ✅ SplashActivity es ahora la pantalla inicial -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 🟢 Login (pantalla siguiente) -->
+        <activity android:name=".LoginActivity" android:exported="true" />
 
         <!-- Otras pantallas -->
         <activity android:name=".MainActivity" android:exported="false" />
