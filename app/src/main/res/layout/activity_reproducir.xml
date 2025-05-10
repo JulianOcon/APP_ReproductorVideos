@@ -1,24 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212"
     android:padding="12dp">
 
-    <!-- Reproductor de video -->
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/playerView"
+    <!-- Contenedor para superponer botón sobre el PlayerView -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_gravity="center"
-        android:background="#000000"
-        app:use_controller="true"
-        app:show_buffering="when_playing"
-        app:show_previous_button="true"
-        app:show_next_button="true"
-        app:resize_mode="fit" />
+        android:layout_height="220dp">
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/playerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#000000"
+            android:keepScreenOn="true"
+            app:surface_type="surface_view"
+            app:use_controller="true"
+            app:show_buffering="when_playing"
+            app:resize_mode="fit" />
+
+
+        <!-- Botón superpuesto arriba a la derecha -->
+        <ImageButton
+            android:id="@+id/fullscreenButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Pantalla completa"
+            android:src="@drawable/ic_fullscreen"
+            app:tint="@android:color/white"
+            tools:ignore="TouchTargetSizeCheck" />
+    </FrameLayout>
 
     <!-- Título del video -->
     <TextView
@@ -43,5 +62,4 @@
         android:paddingTop="4dp"
         android:clipToPadding="false"
         android:contentDescription="Videos recomendados" />
-
 </LinearLayout>

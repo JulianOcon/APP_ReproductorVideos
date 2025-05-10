@@ -86,9 +86,14 @@ dependencies {
     implementation(libs.volley)
 
     // Glide para cargar imágenes (miniaturas de videos)
-    implementation("com.github.bumptech.glide:glide:4.15.1")
+    implementation(libs.github.glide)
     kapt("com.github.bumptech.glide:compiler:4.15.1")
-    implementation ("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
+    implementation (libs.androidx.localbroadcastmanager)
+    
+    
+    // Glide para pantalla completa
+    implementation (libs.androidx.media3.exoplayer.v111)
+    implementation (libs.androidx.media3.ui.v111)
 
 
 

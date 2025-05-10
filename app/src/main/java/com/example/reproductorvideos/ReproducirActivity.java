@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.OptIn;
@@ -41,8 +42,8 @@ public class ReproducirActivity extends AppCompatActivity {
     private RecyclerView recyclerViewRecomendados;
     private VideoAdapter videoAdapter;
 
-    private String videoUrlActual;
-    private String videoTituloActual;
+    private String videoUrlActual = "";
+    private String videoTituloActual = "";
 
     private MediaPlaybackService mediaService;
     private boolean serviceBound = false;
@@ -112,12 +113,50 @@ public class ReproducirActivity extends AppCompatActivity {
         videoAdapter = new VideoAdapter(this, new ArrayList<>());
         recyclerViewRecomendados.setAdapter(videoAdapter);
 
+        String extraUrl = getIntent().getStringExtra("video_url");
+        String extraTitulo = getIntent().getStringExtra("video_titulo");
+        if (extraUrl != null) videoUrlActual = extraUrl;
+        if (extraTitulo != null) videoTituloActual = extraTitulo;
+
+        ImageButton fullscreenButton = findViewById(R.id.fullscreenButton);
+
+        fullscreenButton.setOnClickListener(v -> {
+            if (mediaService != null) {
+                long currentPosition = mediaService.getPlayer().getCurrentPosition();
+
+                Intent intent = new Intent(ReproducirActivity.this, FullscreenPlayerActivity.class);
+                intent.putExtra("video_url", videoUrlActual);
+                intent.putExtra("video_titulo", videoTituloActual);
+                intent.putExtra("video_position", currentPosition);
+                startActivity(intent);
+            }
+        });
+
+
         Intent intent = new Intent(this, MediaPlaybackService.class);
         startService(intent);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
         obtenerVideosRecomendados();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (playerView != null && mediaService != null && mediaService.getPlayer() != null) {
+            // 🔁 Reasigna el player
+            playerView.setPlayer(null); // Asegura limpieza previa
+            playerView.postDelayed(() -> playerView.setPlayer(mediaService.getPlayer()), 100);
+        }
+
+        // ✅ Restaurar título si se perdió
+        if (videoTitle != null && videoTituloActual != null) {
+            videoTitle.setText(videoTituloActual);
+        }
+    }
+
+
 
     private void obtenerVideosRecomendados() {
         ApiService apiService = RetrofitClient.getApiService();
@@ -168,6 +207,7 @@ public class ReproducirActivity extends AppCompatActivity {
         }
     }
 
+
     private final android.content.BroadcastReceiver videoChangeReceiver = new android.content.BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -181,8 +221,22 @@ public class ReproducirActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver(videoChangeReceiver, new IntentFilter(MediaPlaybackService.ACTION_VIDEO_CHANGED));
+
+        // Volver a registrar el receiver del título
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(videoChangeReceiver, new IntentFilter(MediaPlaybackService.ACTION_VIDEO_CHANGED));
+
+        // ✅ Reconectar el player al volver
+        if (mediaService != null && mediaService.getPlayer() != null) {
+            playerView.setPlayer(mediaService.getPlayer());
+        }
+
+        // Restaurar título por si se perdió
+        if (videoTitle != null && videoTituloActual != null) {
+            videoTitle.setText(videoTituloActual);
+        }
     }
+
 
 
     @Override
@@ -190,5 +244,8 @@ public class ReproducirActivity extends AppCompatActivity {
         super.onStop();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(videoChangeReceiver);
     }
+
+
+
 
 }

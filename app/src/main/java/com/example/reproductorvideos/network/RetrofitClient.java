@@ -7,7 +7,7 @@
 
     public class RetrofitClient {
         private static Retrofit retrofit = null;
-        private static String BASE_URL = "http://10.20.106.81:3000/api/"; // valor por defecto
+        private static String BASE_URL = "http://192.168.1.12:3000/api/"; // valor por defecto
 
         // Permite cambiar la URL en tiempo de ejecución
         public static void setBaseUrl(String url) {

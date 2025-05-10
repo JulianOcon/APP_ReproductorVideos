@@ -1,23 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.reproductorvideos">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- ✅ Permisos necesarios para reproducción y notificaciones -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="PlayerRedLucia"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ReproductorVideos"
         android:networkSecurityConfig="@xml/network_security_config">
 
-        <!-- 🟢 LoginActivity será la primera pantalla -->
+        <!-- 🟢 LoginActivity será la pantalla de inicio -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
@@ -27,34 +28,22 @@
             </intent-filter>
         </activity>
 
-        <!-- Pantalla principal (se mostrará después del login) -->
+        <!-- Otras pantallas -->
+        <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".CategoriasActivity" android:exported="false" />
+        <activity android:name=".RegisterActivity" android:exported="false" />
+        <activity android:name=".ReproducirActivity" android:exported="false" />
         <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <!-- Categorías -->
-        <activity
-            android:name=".CategoriasActivity"
+            android:name=".FullscreenPlayerActivity"
+            android:screenOrientation="landscape"
             android:exported="false"
-            android:label=""
-            android:theme="@style/Theme.ReproductorVideos" />
-
-        <activity android:name=".RegisterActivity" />
-
-
-        <!-- Reproducción -->
-        <activity
-            android:name=".ReproducirActivity"
-            android:exported="false"
-            android:label=""
-            android:theme="@style/Theme.ReproductorVideos" />
+            android:theme="@style/Theme.ReproductorVideos"/>
 
         <!-- Servicio de reproducción -->
         <service
             android:name=".MediaPlaybackService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
-
     </application>
 
 </manifest>

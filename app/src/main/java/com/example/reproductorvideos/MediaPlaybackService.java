@@ -55,6 +55,8 @@ public class MediaPlaybackService extends Service {
     private String urlUltimoVideo = "";
     private VideoChangeCallback callback;
 
+    private static MediaPlaybackService instance;
+
     public class LocalBinder extends Binder {
         public MediaPlaybackService getService() {
             return MediaPlaybackService.this;
@@ -64,6 +66,7 @@ public class MediaPlaybackService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -228,5 +231,9 @@ public class MediaPlaybackService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    public static MediaPlaybackService getInstance() {
+        return instance;
     }
 }
