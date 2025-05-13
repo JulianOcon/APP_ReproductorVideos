@@ -1,0 +1,15 @@
+[33mbe274d1[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Falta notificacion
+[33m0b01295[m Cerrar Aplicacion hecho
+[33m91caef7[m cambios de diseños julian
+[33m6517ac5[m ajuste de disño, pantalla completa y notificacion arreglada
+[33m7fbf5c9[m ajuste de disño y pantalla completa
+[33m46bbe8d[m Mi mensaje de commit
+[33ma5d4e3c[m Tu mensaje descriptivo del cambio
+[33mda3e339[m logo, nombre de la aplicacion, boton de adelantar, barra de busqueda y pequeño ajuste al diseño
+[33m194464f[m cambio 2
+[33m76f22cb[m zaid cambios reproducotr
+[33mde73c1c[m Toma la ip en automatico y enlista videos del mas reciente al mas antiguo
+[33m0088d8c[m lee en automatico categorias, falta terminar la parte de reproduccion
+[33mf30f0ba[m muestra las categorias, reproduce en automatico los videos (corregir), lee automaticamente las categorias que se crean
+[33ma4f18a1[m Corrijo errores en el reproductor y actualizo dependencias
+[33m9e65abb[m Primer commit
