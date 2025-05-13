@@ -152,7 +152,7 @@ public class ReproducirActivity extends AppCompatActivity {
     }
 
     private void obtenerVideosRecomendados() {
-        ApiService apiService = RetrofitClient.getApiService();
+        ApiService apiService = RetrofitClient.getApiService(this);
         apiService.obtenerVideos().enqueue(new Callback<List<Video>>() {
             @Override
             public void onResponse(Call<List<Video>> call, Response<List<Video>> response) {

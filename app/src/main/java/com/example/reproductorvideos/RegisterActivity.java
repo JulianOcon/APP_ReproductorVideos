@@ -49,7 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
                     nombre, apellidos, telefono, contrasena, tipoUsuario
             );
 
-            ApiService api = RetrofitClient.getApiService();
+            ApiService api = RetrofitClient.getApiService(this);
             api.register(request).enqueue(new Callback<RegisterResponse>() {
                 @Override
                 public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {

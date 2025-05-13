@@ -3,16 +3,15 @@ package com.example.reproductorvideos;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ListView;
 import android.widget.ArrayAdapter;
-import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.reproductorvideos.network.RetrofitClient;
 import com.example.reproductorvideos.network.ApiService;
+import com.example.reproductorvideos.network.RetrofitClient;
 
 import java.util.List;
 
@@ -34,7 +33,8 @@ public class CategoriasActivity extends AppCompatActivity {
     }
 
     private void fetchCategorias() {
-        ApiService api = RetrofitClient.getApiService();
+        // Llamada al API incluyendo el JWT en cabecera si existe
+        ApiService api = RetrofitClient.getApiService(this);
         api.getCategoriasDisponibles().enqueue(new Callback<List<String>>() {
             @Override
             public void onResponse(@NonNull Call<List<String>> call,
@@ -42,15 +42,12 @@ public class CategoriasActivity extends AppCompatActivity {
                 if (resp.isSuccessful() && resp.body() != null) {
                     List<String> categorias = resp.body();
 
-                    // Creamos ArrayAdapter y lo asignamos al ListView
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(
                             CategoriasActivity.this,
                             android.R.layout.simple_list_item_1,
-                            categorias
-                    );
+                            categorias);
                     listViewCategorias.setAdapter(adapter);
 
-                    // Listener para clicks en ítems
                     listViewCategorias.setOnItemClickListener((parent, view, position, id) -> {
                         String categoria = categorias.get(position);
                         Intent intent = new Intent(CategoriasActivity.this, MainActivity.class);
@@ -65,6 +62,7 @@ public class CategoriasActivity extends AppCompatActivity {
                     Log.e(TAG, "HTTP " + resp.code());
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<List<String>> call, @NonNull Throwable t) {
                 Toast.makeText(CategoriasActivity.this,
