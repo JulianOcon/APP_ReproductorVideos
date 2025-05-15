@@ -28,8 +28,14 @@
             </intent-filter>
         </activity>
 
-        <!-- 🟢 Login (pantalla siguiente) -->
+        <!-- 🟢 Login -->
         <activity android:name=".LoginActivity" android:exported="true" />
+
+        <!-- 🔁 NUEVO: Mp3Activity -->
+        <activity android:name=".Mp3Activity" android:exported="false" />
+
+        <activity android:name=".ExoPlayerActivity" android:exported="false" />
+
 
         <!-- Otras pantallas -->
         <activity android:name=".MainActivity" android:exported="false" />

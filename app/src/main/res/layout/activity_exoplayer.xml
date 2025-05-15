@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:gravity="center_horizontal"
+    android:padding="16dp">
+
+    <!-- Imagen de portada -->
+    <ImageView
+        android:id="@+id/coverImage"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="16dp"
+        android:background="#000000"
+        android:src="@drawable/default_cover" />
+
+    <!-- Título -->
+    <TextView
+        android:id="@+id/tituloText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dead Weight"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"/>
+
+    <!-- Artista -->
+    <TextView
+        android:id="@+id/artistaText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Jack Stauber - Topic"
+        android:textColor="#CCCCCC"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Reproductor -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/playerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:use_controller="true"
+        app:show_timeout="0"
+        app:show_shuffle_button="true"
+        app:show_subtitle_button="false"
+        app:resize_mode="fit"
+        android:background="#000000"/>
+
+</LinearLayout>

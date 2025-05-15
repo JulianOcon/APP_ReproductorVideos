@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212"
-    tools:context=".MainActivity">
+    tools:context=".Mp3Activity">
 
-    <!-- Encabezado estilo YouTube: solo lupa visible al inicio -->
+    <!-- 🔍 Buscador estilo YouTube -->
     <LinearLayout
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
@@ -18,7 +18,7 @@
         android:gravity="center_vertical"
         android:background="#121212"
         android:elevation="4dp">
-        
+
         <ImageView
             android:id="@+id/logoImageView"
             android:layout_width="36dp"
@@ -33,15 +33,14 @@
             android:layout_height="35dp"
             android:src="@drawable/ic_search"
             app:tint="#FFFFFF"
-            android:contentDescription="Buscar"/>
-
+            android:contentDescription="Buscar" />
 
         <EditText
             android:id="@+id/searchEditText"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:hint="Buscar en PlayerLucia"
+            android:hint="Buscar MP3"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/search_bar_background"
@@ -64,7 +63,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Historial de búsqueda -->
+    <!-- Historial de búsqueda (si lo usas para mp3 también) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewHistory"
         android:layout_width="match_parent"
@@ -74,27 +73,19 @@
         tools:listitem="@layout/item_search_history"
         android:paddingHorizontal="8dp" />
 
-    <!-- Barra de progreso -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        style="?android:attr/progressBarStyleLarge"
-        android:indeterminateTint="#FF4081" />
-
-    <!-- Lista de videos -->
+    <!-- Lista de MP3 -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+        android:id="@+id/recyclerViewMp3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:paddingBottom="16dp"
-        android:contentDescription="Lista de videos disponibles"
-        tools:listitem="@layout/video_item" />
+        android:contentDescription="Lista de archivos MP3"
+        tools:listitem="@layout/item_mp3" />
+
+    <!-- Botón para cambiar a modo video -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -104,14 +95,12 @@
             android:id="@+id/btnSwitchMode"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:text="MP3"
+            android:text="MP4"
             android:textColor="#FFFFFF"
             android:backgroundTint="#FF4081"
             android:background="@drawable/round_button"
             android:elevation="6dp"
             android:layout_gravity="center" />
     </FrameLayout>
-
-
 
 </LinearLayout>

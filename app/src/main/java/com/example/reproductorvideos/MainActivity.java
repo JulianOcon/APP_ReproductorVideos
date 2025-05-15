@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText searchEditText;
     private ImageView icSearch, logoImageView;
     private SharedPreferences prefs;
+    private Button btnSwitchMode;
 
     private List<Video> videoListOriginal;
     private final List<String> searchHistory = new ArrayList<>();
@@ -56,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 1. Verificar sesión JWT
         prefs = getSharedPreferences("APP_PREFS", MODE_PRIVATE);
         String token = prefs.getString("jwt_token", null);
         if (token == null) {
@@ -65,34 +66,24 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 2. Cargar layout
         setContentView(R.layout.activity_main);
 
-        // 3. Referencias UI
         logoImageView = findViewById(R.id.logoImageView);
         icSearch = findViewById(R.id.ic_Search);
         searchEditText = findViewById(R.id.searchEditText);
+        btnSwitchMode = findViewById(R.id.btnSwitchMode);
 
-        // Obtén el drawable y establece sus bounds al tamaño deseado
         int iconSizePx = getResources().getDimensionPixelSize(R.dimen.search_icon_size);
         Drawable[] drawables = searchEditText.getCompoundDrawables();
         Drawable left = drawables[0];
         if (left != null) {
             left.setBounds(0, 0, iconSizePx, iconSizePx);
-            // Recoloca los drawables con los mismos top/right/bottom
-            searchEditText.setCompoundDrawables(
-                    left,
-                    drawables[1],
-                    drawables[2],
-                    drawables[3]
-            );
+            searchEditText.setCompoundDrawables(left, drawables[1], drawables[2], drawables[3]);
         }
-
 
         recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
         recyclerView = findViewById(R.id.recyclerView);
 
-        // 4. Logout al pulsar logo
         logoImageView.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(MainActivity.this, v);
             popup.getMenu().add("Cerrar sesión");
@@ -107,21 +98,17 @@ public class MainActivity extends AppCompatActivity {
             popup.show();
         });
 
-        // 5. Ocultar buscador y historial inicialmente
         searchEditText.setVisibility(View.GONE);
         recyclerViewHistory.setVisibility(View.GONE);
 
-        // 6. Configurar historial
         recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
         historyAdapter = new HistoryAdapter();
         recyclerViewHistory.setAdapter(historyAdapter);
 
-        // 7. Configurar lista de videos
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new VideoAdapter(this, new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
-        // 8. Listener externo: al pulsar icSearch muestra el editText
         icSearch.setOnClickListener(v -> {
             icSearch.setVisibility(View.GONE);
             searchEditText.setVisibility(View.VISIBLE);
@@ -132,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
             historyAdapter.updateHistory(searchHistory);
         });
 
-        // 9. Listener interno: drawableStart cierra buscador
         searchEditText.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP && searchEditText.getCompoundDrawables()[0] != null) {
                 int width = searchEditText.getCompoundDrawables()[0].getBounds().width();
@@ -147,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // 10. Filtrar en tiempo real
         searchEditText.addTextChangedListener(new android.text.TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void afterTextChanged(android.text.Editable s) {}
@@ -156,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 11. Enter añade al historial
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String term = searchEditText.getText().toString().trim();
@@ -171,13 +155,17 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // 12. Obtener IP dinámica y videos
+        btnSwitchMode.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, Mp3Activity.class);
+            startActivity(intent);
+        });
+
         fetchServerIpAndVideos();
     }
 
     private void fetchServerIpAndVideos() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.12:3000/api/")
+                .baseUrl("http://10.20.106.94:3000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         IPService ipService = retrofit.create(IPService.class);

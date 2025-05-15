@@ -5,6 +5,7 @@ import com.example.reproductorvideos.model.LoginRequest;
 import com.example.reproductorvideos.model.LoginResponse;
 import com.example.reproductorvideos.model.RegisterRequest;
 import com.example.reproductorvideos.model.RegisterResponse;
+import com.example.reproductorvideos.model.Mp3File;
 
 import java.util.List;
 
@@ -39,6 +40,9 @@ public interface ApiService {
     // Obtener videos por categoría
     @GET("videos/{categoria}")
     Call<List<Video>> obtenerVideosPorCategoria(@Path("categoria") String categoria);
+
+    @GET("mp3")
+    Call<List<Mp3File>> obtenerMp3();
 
 
 }
