@@ -17,6 +17,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
@@ -184,7 +185,7 @@ public class MediaPlaybackService extends Service {
         // Envía broadcast para cerrar UI
         Intent closeIntent = new Intent("com.example.reproductorvideos.CERRAR_APP");
         closeIntent.setPackage(getPackageName());
-        sendBroadcast(closeIntent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(closeIntent);
     }
 
     private Notification buildDummyNotification() {

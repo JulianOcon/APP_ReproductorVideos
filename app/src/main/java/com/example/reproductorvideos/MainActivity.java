@@ -89,8 +89,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
-
         recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
         recyclerView = findViewById(R.id.recyclerView);
 
