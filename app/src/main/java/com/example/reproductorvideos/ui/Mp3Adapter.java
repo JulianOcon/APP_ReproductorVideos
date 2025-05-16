@@ -2,6 +2,10 @@ package com.example.reproductorvideos.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,31 +38,64 @@ public class Mp3Adapter extends RecyclerView.Adapter<Mp3Adapter.Mp3ViewHolder> {
         notifyDataSetChanged();
     }
 
-    @NonNull
-    @Override
+    @NonNull @Override
     public Mp3ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_mp3, parent, false);
-        return new Mp3ViewHolder(view);
+        View v = LayoutInflater.from(context)
+                .inflate(R.layout.item_mp3, parent, false);
+        return new Mp3ViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull Mp3ViewHolder holder, int position) {
         Mp3File mp3 = mp3List.get(position);
         holder.tvTitulo.setText(mp3.getTitulo());
-        holder.tvArtista.setText(mp3.getArtista() != null ? mp3.getArtista() : "Desconocido");
+        holder.tvArtista.setText(mp3.getArtista());
 
-        Glide.with(context)
-                .load(mp3.getCoverUrl())
-                .placeholder(R.drawable.default_cover)
-                .into(holder.imgCover);
+        // Intenta cargar la URL primero
+        String coverUrl = mp3.getCoverUrl();
+        if (coverUrl != null && !coverUrl.isEmpty()) {
+            Glide.with(context)
+                    .load(coverUrl)
+                    .placeholder(R.drawable.default_cover)
+                    .into(holder.imgCover);
+        } else {
+            // Si no hay URL, extrae la imagen embebida
+            byte[] art = getEmbeddedArt(mp3.getUrl());
+            if (art != null) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(art, 0, art.length);
+                holder.imgCover.setImageBitmap(bmp);
+            } else {
+                holder.imgCover.setImageResource(R.drawable.default_cover);
+            }
+        }
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, ExoPlayerActivity.class);
-            intent.putExtra("url", mp3.getUrl());
-            intent.putExtra("titulo", mp3.getTitulo());
+            intent.putExtra("mp3List", new ArrayList<>(mp3List));
+            intent.putExtra("position", position);
             context.startActivity(intent);
         });
     }
+
+    private byte[] getEmbeddedArt(String uri) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(context, Uri.parse(uri));
+            return retriever.getEmbeddedPicture();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            // envuelve el release en try/catch para atrapar cualquier excepción
+            try {
+                retriever.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 
     @Override
     public int getItemCount() {
@@ -71,9 +108,11 @@ public class Mp3Adapter extends RecyclerView.Adapter<Mp3Adapter.Mp3ViewHolder> {
 
         public Mp3ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvTitulo = itemView.findViewById(R.id.tvTituloMp3);
+            tvTitulo  = itemView.findViewById(R.id.tvTituloMp3);
             tvArtista = itemView.findViewById(R.id.tvArtistaMp3);
-            imgCover = itemView.findViewById(R.id.imgCover);
+            imgCover  = itemView.findViewById(R.id.coverImage);
         }
     }
+
+
 }

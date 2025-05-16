@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchServerIpAndVideos() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.20.106.94:3000/api/")
+                .baseUrl("http://192.168.1.12:3000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         IPService ipService = retrofit.create(IPService.class);

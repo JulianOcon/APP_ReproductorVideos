@@ -11,7 +11,7 @@
 
     <!-- Miniatura de la portada -->
     <ImageView
-        android:id="@+id/imgCover"
+        android:id="@+id/coverImage"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:scaleType="centerCrop"

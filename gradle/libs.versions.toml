@@ -21,6 +21,7 @@ material = "1.11.0"
 volley = "1.2.1"
 cardview = "1.0.0"
 media3 = "1.2.1"
+materialVersion = "1.12.0"
 [libraries]
 # Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +62,7 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 volley = { module = "com.android.volley:volley", version.ref = "volley" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
