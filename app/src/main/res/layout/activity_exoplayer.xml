@@ -7,14 +7,22 @@
     android:layout_height="match_parent"
     tools:context=".ExoPlayerActivity">
 
-    <!-- Barra superior -->
+    <!-- 🔄 Imagen de fondo desenfocada -->
+    <ImageView
+        android:id="@+id/bg_blur"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.6"
+        android:contentDescription="Fondo desenfocado" />
+
+    <!-- 🔙 Botón atrás flotante (sin fondo gris) -->
     <RelativeLayout
         android:id="@+id/layout_top_btn"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="23dp"
-        android:background="@drawable/gradient_background">
+        android:layout_marginTop="23dp">
 
         <ImageView
             android:id="@+id/back_btn"
@@ -22,60 +30,30 @@
             android:layout_height="30dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:src="@drawable/ic_chevron_left"/>
-
-        <TextView
-            android:id="@+id/nowPlayingLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/back_btn"
-            android:layout_centerVertical="true"
-            android:gravity="center"
-            android:text="Now Playing"
-            android:textColor="#FDFDFD"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_chevron_left"
+            app:tint="#FFFFFF" />
     </RelativeLayout>
 
-    <!-- Portada con degradado -->
-    <RelativeLayout
-        android:id="@+id/card"
-        android:layout_width="match_parent"
-        android:layout_height="350dp"
-        android:layout_below="@id/layout_top_btn">
-
-        <ImageView
-            android:id="@+id/coverImage"
-            android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/default_cover"/>
-
-        <ImageView
-            android:id="@+id/imageViewGradient"
-            android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:layout_alignParentBottom="true"
-            android:src="@drawable/gredient_bg"/>
-    </RelativeLayout>
-
-    <!-- Título y artista -->
+    <!-- Título con borde negro -->
     <TextView
         android:id="@+id/tituloText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/card"
-        android:layout_marginTop="8dp"
+        android:layout_below="@id/layout_top_btn"
+        android:layout_marginTop="12dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:gravity="center"
         android:ellipsize="end"
         android:singleLine="true"
         android:text="Song Title"
-        android:textColor="#000000"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/text_border"
         android:textSize="22sp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
+    <!-- Artista con borde negro -->
     <TextView
         android:id="@+id/artistaText"
         android:layout_width="match_parent"
@@ -87,16 +65,47 @@
         android:gravity="center"
         android:ellipsize="end"
         android:singleLine="true"
-        android:text="Artist Name"
-        android:textColor="#000000"
-        android:textSize="18sp"/>
+        android:text="Desconocido"
+        android:textColor="#DDDDDD"
+        android:background="@drawable/text_border"
+        android:textSize="18sp" />
 
-    <!-- SeekBar y tiempos -->
+
+    <!-- Portada con degradado -->
+    <RelativeLayout
+        android:id="@+id/card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/artistaText"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <ImageView
+            android:id="@+id/coverImage"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/default_cover"
+            android:background="@drawable/rounded_corners" />
+
+        <ImageView
+            android:id="@+id/imageViewGradient"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/gredient_bg" />
+    </RelativeLayout>
+
+    <!-- 🎚 SeekBar y tiempos -->
     <RelativeLayout
         android:id="@+id/seek_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@id/artistaText"
+        android:layout_below="@id/card"
         android:layout_above="@+id/relative_layout_for_bottom"
         android:layout_marginBottom="15dp">
 
@@ -107,7 +116,7 @@
             android:layout_alignParentStart="true"
             android:layout_marginStart="10dp"
             android:text="0:00"
-            android:textColor="#000000"/>
+            android:textColor="#FFFFFF" />
 
         <TextView
             android:id="@+id/durationTotal"
@@ -116,7 +125,7 @@
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="10dp"
             android:text="0:00"
-            android:textColor="#000000"/>
+            android:textColor="#FFFFFF" />
 
         <SeekBar
             android:id="@+id/seekBar"
@@ -124,10 +133,12 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"/>
+            android:layout_marginEnd="20dp"
+            android:thumbTint="#FFFFFF"
+            android:progressTint="#FFFFFF" />
     </RelativeLayout>
 
-    <!-- Controles de reproducción -->
+    <!-- 🎵 Controles de reproducción -->
     <RelativeLayout
         android:id="@+id/relative_layout_for_bottom"
         android:layout_width="match_parent"
@@ -143,7 +154,8 @@
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:layout_marginStart="32dp"
-            android:src="@drawable/ic_shuffle_off"/>
+            android:src="@drawable/ic_shuffle_off"
+            app:tint="#FFFFFF" />
 
         <ImageView
             android:id="@+id/id_prev"
@@ -152,7 +164,8 @@
             android:layout_toStartOf="@id/play_pause"
             android:layout_centerVertical="true"
             android:layout_marginEnd="16dp"
-            android:src="@drawable/ic_skip_previous"/>
+            android:src="@drawable/ic_skip_previous"
+            app:tint="#FFFFFF" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/play_pause"
@@ -160,7 +173,9 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:src="@drawable/ic_play"/>
+            android:src="@drawable/ic_play"
+            app:tint="#FFFFFF"
+            app:backgroundTint="#000000" />
 
         <ImageView
             android:id="@+id/id_next"
@@ -169,7 +184,8 @@
             android:layout_toEndOf="@id/play_pause"
             android:layout_centerVertical="true"
             android:layout_marginStart="16dp"
-            android:src="@drawable/ic_skip_next"/>
+            android:src="@drawable/ic_skip_next"
+            app:tint="#FFFFFF" />
 
         <ImageView
             android:id="@+id/id_repeat"
@@ -178,7 +194,8 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:layout_marginEnd="32dp"
-            android:src="@drawable/ic_repeat_off"/>
+            android:src="@drawable/ic_repeat_off"
+            app:tint="#FFFFFF" />
     </RelativeLayout>
 
 </RelativeLayout>

@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
@@ -49,6 +50,13 @@ public class MediaPlaybackService extends Service {
     private List<Video> listaVideos = new ArrayList<>();
     private String urlUltimoVideo = "";
     private VideoChangeCallback callback;
+
+    private android.graphics.Bitmap currentCoverBitmap;
+
+    public Bitmap getCurrentCoverBitmap() {
+        return currentCoverBitmap;
+    }
+
 
     public interface VideoChangeCallback {
         void onVideoChanged(String url, String titulo);
@@ -203,6 +211,8 @@ public class MediaPlaybackService extends Service {
         this.listaVideos = videos != null ? videos : new ArrayList<>();
     }
 
+
+
     public void playNewVideo(String videoUrl, String title) {
         if (exoPlayer != null) {
             exoPlayer.stop();
@@ -238,6 +248,7 @@ public class MediaPlaybackService extends Service {
             if (callback != null) callback.onVideoChanged(v.getUrl(), v.getTitle());
         }
     }
+
 
     public ExoPlayer getPlayer() { return exoPlayer; }
 

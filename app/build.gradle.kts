@@ -63,9 +63,15 @@ dependencies {
     implementation(libs.material)
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 
+    implementation ("androidx.palette:palette:1.0.0")
 
 
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
+
+    implementation  ("com.github.bumptech.glide:glide:4.15.1")
+    implementation  ("jp.wasabeef:glide-transformations:4.3.0")
+    annotationProcessor  ("com.github.bumptech.glide:compiler:4.15.1")
+
 
     // Dependencias de Retrofit para consumir la API
     implementation(libs.retrofit)
