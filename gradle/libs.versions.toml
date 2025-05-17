@@ -1,6 +1,7 @@
 [versions]
 agp = "8.9.2"
 androidxMedia3Ui = "1.3.1"
+glideTransformationsVersion = "4.3.0"
 glideVersion = "4.16.0"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
@@ -63,6 +64,7 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 volley = { module = "com.android.volley:volley", version.ref = "volley" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
+wasabeef-glide-transformations = { module = "jp.wasabeef:glide-transformations", version.ref = "glideTransformationsVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

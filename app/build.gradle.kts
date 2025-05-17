@@ -98,6 +98,7 @@ dependencies {
 
     // Glide para cargar imágenes (miniaturas de videos)
     implementation(libs.github.glide)
+    implementation(libs.wasabeef.glide.transformations)
     kapt("com.github.bumptech.glide:compiler:4.15.1")
     implementation (libs.androidx.localbroadcastmanager)
     
