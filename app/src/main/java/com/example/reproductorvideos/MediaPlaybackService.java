@@ -1,4 +1,3 @@
-// MediaPlaybackService.java CORREGIDO: solo anteriores, play/pause, siguientes y "X"
 package com.example.reproductorvideos;
 
 import android.app.Notification;
@@ -6,14 +5,15 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,13 +50,19 @@ public class MediaPlaybackService extends Service {
     private List<Video> listaVideos = new ArrayList<>();
     private String urlUltimoVideo = "";
     private VideoChangeCallback callback;
+    private Bitmap currentCoverBitmap;
 
-    private android.graphics.Bitmap currentCoverBitmap;
+    // --- NUEVO: Receiver para el cierre global
+    private final BroadcastReceiver closeAllReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            detenerServicio();
+        }
+    };
 
     public Bitmap getCurrentCoverBitmap() {
         return currentCoverBitmap;
     }
-
 
     public interface VideoChangeCallback {
         void onVideoChanged(String url, String titulo);
@@ -80,6 +86,10 @@ public class MediaPlaybackService extends Service {
             );
             getSystemService(NotificationManager.class).createNotificationChannel(channel);
         }
+
+        // REGISTRAR el receiver global (corrección)
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(closeAllReceiver, new IntentFilter("com.example.reproductorvideos.CERRAR_APP"));
 
         // Inicializa ExoPlayer
         exoPlayer = new ExoPlayer.Builder(this).build();
@@ -122,8 +132,8 @@ public class MediaPlaybackService extends Service {
                     }
 
                     @Override
-                    public android.graphics.Bitmap getCurrentLargeIcon(Player player,
-                                                                       PlayerNotificationManager.BitmapCallback callback) {
+                    public Bitmap getCurrentLargeIcon(Player player,
+                                                      PlayerNotificationManager.BitmapCallback callback) {
                         return BitmapFactory.decodeResource(
                                 getResources(),
                                 R.drawable.ic_launcher_foreground
@@ -164,7 +174,6 @@ public class MediaPlaybackService extends Service {
                 })
                 .build();
 
-        // Ajusta controles estándar y desactiva rewind/fast-forward
         notificationManager.setUsePreviousAction(true);
         notificationManager.setUsePlayPauseActions(true);
         notificationManager.setUseNextAction(true);
@@ -175,6 +184,13 @@ public class MediaPlaybackService extends Service {
 
         // Inicia en primer plano
         startForeground(NOTIFICATION_ID, buildDummyNotification());
+    }
+
+    @Override
+    public void onDestroy() {
+        // DESREGISTRAR el receiver global (corrección)
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(closeAllReceiver);
+        super.onDestroy();
     }
 
     private void detenerServicio() {
@@ -211,8 +227,6 @@ public class MediaPlaybackService extends Service {
         this.listaVideos = videos != null ? videos : new ArrayList<>();
     }
 
-
-
     public void playNewVideo(String videoUrl, String title) {
         if (exoPlayer != null) {
             exoPlayer.stop();
@@ -248,7 +262,6 @@ public class MediaPlaybackService extends Service {
             if (callback != null) callback.onVideoChanged(v.getUrl(), v.getTitle());
         }
     }
-
 
     public ExoPlayer getPlayer() { return exoPlayer; }
 

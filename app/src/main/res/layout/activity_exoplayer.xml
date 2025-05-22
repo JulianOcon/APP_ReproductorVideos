@@ -112,7 +112,7 @@
     <!-- Controles de reproducción al estilo YouTube Music -->
     <LinearLayout
         android:id="@+id/playback_controls"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
