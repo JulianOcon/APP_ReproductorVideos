@@ -1,5 +1,6 @@
 package com.example.reproductorvideos;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -7,7 +8,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -82,18 +85,35 @@ public class ReproducirActivity extends AppCompatActivity {
     };
 
 
+
     private final BroadcastReceiver cerrarAppReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context ctx, Intent intent) {
-            Log.d("ReproducirActivity", "🔴 cierre solicitado");
-            // limpia UI
-            playerView.setPlayer(null);
-            recyclerViewRecomendados.setAdapter(null);
+            // 1) Unbind y stop service
             if (serviceBound) {
                 unbindService(connection);
                 serviceBound = false;
             }
-            // cierra toda la app
-            finishAffinity();
+            stopService(new Intent(ReproducirActivity.this, MediaPlaybackService.class));
+
+            // 2) Remueve todas las tareas de recientes
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                if (am != null) {
+                    for (ActivityManager.AppTask task : am.getAppTasks()) {
+                        task.finishAndRemoveTask();
+                    }
+                }
+            } else {
+                finishAndRemoveTask();  // fallback
+            }
+
+            // 3) Cierra esta Activity (por si acaso queda alguna)
+            finishAndRemoveTask();
+
+            // 4) Mata el proceso tras un leve delay para que Android actualice Recientes
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }, 100);
         }
     };
 
