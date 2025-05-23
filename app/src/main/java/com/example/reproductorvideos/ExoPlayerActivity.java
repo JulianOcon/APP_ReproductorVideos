@@ -1,5 +1,7 @@
 package com.example.reproductorvideos;
 
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,6 +14,7 @@ import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -68,11 +71,35 @@ public class ExoPlayerActivity extends AppCompatActivity {
     private final BroadcastReceiver closeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            finishAffinity(); // Cierra todas las activities de la app en la task stack
-            // ¡NO LLAMES a killProcess aquí!
+            // 1) Desvinculamos y paramos el servicio
+            if (serviceBound) {
+                unbindService(conn);
+                serviceBound = false;
+            }
+            stopService(new Intent(ExoPlayerActivity.this, MediaPlaybackMp3Service.class));
+
+            // 2) Removemos todas las AppTasks de la lista de recientes
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                if (am != null) {
+                    for (ActivityManager.AppTask task : am.getAppTasks()) {
+                        task.finishAndRemoveTask();
+                    }
+                }
+            } else {
+                // Fallback para versiones viejas
+                finishAndRemoveTask();
+            }
+
+            // 3) Cerramos esta Activity
+            finishAndRemoveTask();
+
+            // 4) Matamos el proceso tras un breve delay
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }, 100);
         }
     };
-
 
 
 
@@ -200,7 +227,6 @@ public class ExoPlayerActivity extends AppCompatActivity {
             });
 
             handler.post(updateProgress);
-            // Refuerza la UI
             handler.postDelayed(() -> actualizarUI(player.getCurrentMediaItemIndex()), 150);
         }
 
@@ -229,7 +255,6 @@ public class ExoPlayerActivity extends AppCompatActivity {
         durationTotal  = findViewById(R.id.durationTotal);
 
         backBtn.setOnClickListener(v -> finish());
-        // NO registres receivers aquí
     }
 
     @Override
@@ -239,7 +264,6 @@ public class ExoPlayerActivity extends AppCompatActivity {
         startService(svc);
         bindService(svc, conn, Context.BIND_AUTO_CREATE);
 
-        // Registra los receivers con LocalBroadcastManager
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(closeReceiver, new IntentFilter("com.example.reproductorvideos.CERRAR_APP"));
         LocalBroadcastManager.getInstance(this)
@@ -247,8 +271,7 @@ public class ExoPlayerActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        // Desregistra los receivers
+    protected void onDestroy() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(closeReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(trackChangedReceiver);
 
@@ -257,7 +280,7 @@ public class ExoPlayerActivity extends AppCompatActivity {
             serviceBound = false;
         }
         handler.removeCallbacks(updateProgress);
-        super.onStop();
+        super.onDestroy();
     }
 
     @Override
@@ -277,7 +300,6 @@ public class ExoPlayerActivity extends AppCompatActivity {
         tituloText.setText(m.getTitulo());
         artistaText.setText(m.getArtista());
 
-        // Toma la carátula del MediaItem actual
         ExoPlayer player = mp3Service.getPlayer();
         Bitmap cover = null;
 

@@ -5,15 +5,15 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,7 +30,10 @@ import androidx.palette.graphics.Palette;
 import com.example.reproductorvideos.model.Mp3File;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @UnstableApi
 public class MediaPlaybackMp3Service extends Service {
@@ -38,12 +41,20 @@ public class MediaPlaybackMp3Service extends Service {
     public static final String EXTRA_TRACK_INDEX = "track_index";
     private static final String CHANNEL_ID = "mp3_channel";
     private static final int NOTIFICATION_ID = 2;
+    private static final String ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE";
 
     private final IBinder binder = new LocalBinder();
     private ExoPlayer exoPlayer;
     private PlayerNotificationManager notificationManager;
     private List<Mp3File> playlist = new ArrayList<>();
     private Bitmap currentCoverBitmap;
+
+    private final BroadcastReceiver closeAllReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            cerrarApp();
+        }
+    };
 
     public class LocalBinder extends Binder {
         public MediaPlaybackMp3Service getService() {
@@ -62,6 +73,9 @@ public class MediaPlaybackMp3Service extends Service {
             ((NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE))
                     .createNotificationChannel(chan);
         }
+
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(closeAllReceiver, new IntentFilter("com.example.reproductorvideos.CERRAR_APP"));
 
         exoPlayer = new ExoPlayer.Builder(this).build();
         exoPlayer.setRepeatMode(Player.REPEAT_MODE_OFF);
@@ -91,7 +105,6 @@ public class MediaPlaybackMp3Service extends Service {
             }
         });
 
-        // --- NOTIFICACIÓN: solo acciones estándar (no custom X)
         notificationManager = new PlayerNotificationManager.Builder(this, NOTIFICATION_ID, CHANNEL_ID)
                 .setMediaDescriptionAdapter(new PlayerNotificationManager.MediaDescriptionAdapter() {
                     @Override
@@ -118,16 +131,35 @@ public class MediaPlaybackMp3Service extends Service {
                                 : BitmapFactory.decodeResource(getResources(), R.drawable.default_cover);
                     }
                 })
-                .setNotificationListener(new PlayerNotificationManager.NotificationListener() {
+                .setCustomActionReceiver(new PlayerNotificationManager.CustomActionReceiver() {
+                    @NonNull
                     @Override
-                    public void onNotificationCancelled(int notificationId, boolean dismissedByUser) {
-                        cerrarApp();
+                    public Map<String, NotificationCompat.Action> createCustomActions(Context context, int instanceId) {
+                        Intent stopIntent = new Intent(context, MediaPlaybackMp3Service.class);
+                        stopIntent.setAction(ACTION_STOP_SERVICE);
+                        PendingIntent pi = PendingIntent.getService(
+                                context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE
+                        );
+                        NotificationCompat.Action closeAction = new NotificationCompat.Action.Builder(
+                                R.drawable.ic_close, "Cerrar", pi
+                        ).build();
+                        Map<String, NotificationCompat.Action> map = new HashMap<>();
+                        map.put(ACTION_STOP_SERVICE, closeAction);
+                        return map;
+                    }
+                    @NonNull
+                    @Override
+                    public List<String> getCustomActions(@NonNull Player player) {
+                        return Collections.singletonList(ACTION_STOP_SERVICE);
                     }
                     @Override
-                    public void onNotificationPosted(int notificationId, Notification notification, boolean ongoing) {
-                        // Nada especial
+                    public void onCustomAction(@NonNull Player player,
+                                               @NonNull String action,
+                                               @NonNull Intent intent) {
+                        if (ACTION_STOP_SERVICE.equals(action)) {
+                            cerrarApp();
+                        }
                     }
-
                 })
                 .build();
 
@@ -136,36 +168,33 @@ public class MediaPlaybackMp3Service extends Service {
         notificationManager.setUseNextAction(true);
         notificationManager.setUseRewindAction(false);
         notificationManager.setUseFastForwardAction(false);
-        notificationManager.setUseStopAction(true); // Habilita botón stop
+        notificationManager.setUseStopAction(false); // SIN stop estándar, solo X
         notificationManager.setPlayer(exoPlayer);
 
         startForeground(NOTIFICATION_ID, buildDummyNotification());
     }
 
     private void cerrarApp() {
+        if (notificationManager != null) notificationManager.setPlayer(null);
         if (exoPlayer != null) {
             exoPlayer.stop();
             exoPlayer.release();
             exoPlayer = null;
         }
-        if (notificationManager != null) {
-            notificationManager.setPlayer(null);
-        }
-
-        // 1. Manda broadcast LOCAL para Activities
-        Intent closeIntent = new Intent("com.example.reproductorvideos.CERRAR_APP");
-        LocalBroadcastManager.getInstance(this).sendBroadcast(closeIntent);
-
-        // 2. Detén foreground y el service
         stopForeground(true);
         stopSelf();
-        // ¡NO mates el proceso!
+
+        Intent closeIntent = new Intent("com.example.reproductorvideos.CERRAR_APP");
+        closeIntent.setPackage(getPackageName());
+        LocalBroadcastManager.getInstance(this).sendBroadcast(closeIntent);
     }
+
+
 
 
     @Override
     public void onDestroy() {
-        cerrarApp();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(closeAllReceiver);
         super.onDestroy();
     }
 
@@ -177,7 +206,9 @@ public class MediaPlaybackMp3Service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Ya no necesitas una acción custom, sólo usa stop
+        if (intent != null && ACTION_STOP_SERVICE.equals(intent.getAction())) {
+            cerrarApp();
+        }
         return START_NOT_STICKY;
     }
 

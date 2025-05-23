@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -26,7 +27,6 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
-
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
@@ -83,10 +83,21 @@ public class Mp3Activity extends AppCompatActivity {
     private final BroadcastReceiver closeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            finishAffinity(); // Cierra todas las activities de la app en la task stack
-            // ¡NO LLAMES a killProcess aquí!
+            if (serviceBound) {
+                unbindService(conn);
+                serviceBound = false;
+            }
+
+            finishAffinity(); // solo esto aquí, sin TransparentExitActivity
         }
     };
+
+
+
+
+
+
+
 
 
 
@@ -217,23 +228,19 @@ public class Mp3Activity extends AppCompatActivity {
         startService(svc);
         bindService(svc, conn, Context.BIND_AUTO_CREATE);
 
-        // REGISTRA el receiver aquí:
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(closeReceiver, new IntentFilter("com.example.reproductorvideos.CERRAR_APP"));
     }
 
     @Override
-    protected void onStop() {
-        // DESREGISTRA el receiver aquí:
+    protected void onDestroy() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(closeReceiver);
-
         if (serviceBound) {
             unbindService(conn);
             serviceBound = false;
         }
-        super.onStop();
+        super.onDestroy();
     }
-
 
     private void fetchMp3Files() {
         RetrofitClient.getApiService(this)
