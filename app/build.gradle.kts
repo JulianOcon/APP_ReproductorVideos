@@ -109,8 +109,7 @@ dependencies {
 
     implementation (libs.media3.ui.v131)
 
-
-
+    implementation("androidx.media3:media3-common:1.7.1")
 
 }
 

@@ -1,6 +1,6 @@
+// src/main/java/com/example/reproductorvideos/Mp3Activity.java
 package com.example.reproductorvideos;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8,45 +8,42 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.media.MediaMetadataRetriever;
-import android.os.Build;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.reproductorvideos.model.Mp3File;
 import com.example.reproductorvideos.network.RetrofitClient;
 import com.example.reproductorvideos.ui.Mp3Adapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executors;
 
+import jp.wasabeef.glide.transformations.BlurTransformation;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -54,164 +51,135 @@ import retrofit2.Response;
 @UnstableApi
 public class Mp3Activity extends AppCompatActivity {
 
-    private static final int REQUEST_NOTIFICATION = 1001;
-
     private RecyclerView recyclerViewMp3, recyclerViewHistory;
     private Mp3Adapter adapter;
-    private EditText searchEditText;
-    private ImageView icSearch, logoImageView;
-    private Button btnSwitchMode;
     private List<Mp3File> mp3ListOriginal = new ArrayList<>();
-    private final List<String> searchHistory = new ArrayList<>();
 
     private MediaPlaybackMp3Service mp3Service;
     private boolean serviceBound = false;
 
-    private final ServiceConnection conn = new ServiceConnection() {
-        @OptIn(markerClass = UnstableApi.class)
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder binder) {
-            mp3Service = ((MediaPlaybackMp3Service.LocalBinder) binder).getService();
-            serviceBound = true;
-        }
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            serviceBound = false;
+    // Mini-player views
+    private View cardMini;
+    private ImageView miniBgBlur, miniCover, miniPrev, miniPlayPause, miniNext;
+    private TextView miniTitle, miniArtist, miniCurrentTime, miniTotalTime;
+    private Button btnSwitchMode;
+
+    // Handler para actualizar solo el tiempo cada segundo
+    private final Handler miniHandler = new Handler();
+    private final Runnable timeUpdater = new Runnable() {
+        @Override public void run() {
+            if (!serviceBound) return;
+            Player p = mp3Service.getPlayer();
+            int cur = (int)(p.getCurrentPosition()/1000);
+            miniCurrentTime.setText(formattedTime(cur));
+            long durMs = p.getDuration();
+            if (durMs > 0) {
+                miniTotalTime.setText(formattedTime((int)(durMs/1000)));
+            }
+            miniPlayPause.setImageResource(
+                    p.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play
+            );
+            miniHandler.postDelayed(this, 1000);
         }
     };
 
+    // Receiver para cambios de pista
+    private final BroadcastReceiver trackChangedReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context ctx, Intent intent) {
+            updateMiniMetadata();
+        }
+    };
+    // Receiver para cerrar app
     private final BroadcastReceiver closeReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
+        @Override public void onReceive(Context ctx, Intent intent) {
             if (serviceBound) {
                 unbindService(conn);
                 serviceBound = false;
             }
-
-            finishAffinity(); // solo esto aquí, sin TransparentExitActivity
+            finishAffinity();
         }
     };
 
-
-
-
-
-
-
-
-
-
-
-    public boolean isServiceBound() {
-        return serviceBound;
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    public MediaPlaybackMp3Service getMp3Service() {
-        return mp3Service;
-    }
+    // Conexión al servicio de reproducción
+    private final ServiceConnection conn = new ServiceConnection() {
+        @Override public void onServiceConnected(ComponentName name, IBinder binder) {
+            mp3Service = ((MediaPlaybackMp3Service.LocalBinder) binder).getService();
+            serviceBound = true;
+            updateMiniMetadata();
+        }
+        @Override public void onServiceDisconnected(ComponentName name) {
+            serviceBound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mp3);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                        REQUEST_NOTIFICATION);
-            }
-        }
-
-        logoImageView       = findViewById(R.id.logoImageView);
-        icSearch            = findViewById(R.id.ic_Search);
-        searchEditText      = findViewById(R.id.searchEditText);
-        recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
-        recyclerViewMp3     = findViewById(R.id.recyclerViewMp3);
-        btnSwitchMode       = findViewById(R.id.btnSwitchMode);
-
-        logoImageView.setOnClickListener(v -> {
-            PopupMenu popup = new PopupMenu(this, v);
-            popup.getMenu().add("Cerrar sesión");
-            popup.setOnMenuItemClickListener(item -> {
-                startActivity(new Intent(this, LoginActivity.class));
-                finishAffinity();
-                return true;
-            });
-            popup.show();
-        });
-
-        recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
-        HistoryAdapter historyAdapter = new HistoryAdapter();
-        recyclerViewHistory.setAdapter(historyAdapter);
-
+        // Lista de MP3
+        recyclerViewMp3 = findViewById(R.id.recyclerViewMp3);
         recyclerViewMp3.setLayoutManager(new LinearLayoutManager(this));
         adapter = new Mp3Adapter(this);
         recyclerViewMp3.setAdapter(adapter);
 
-        icSearch.setOnClickListener(v -> {
-            icSearch.setVisibility(View.GONE);
-            searchEditText.setVisibility(View.VISIBLE);
-            recyclerViewHistory.setVisibility(View.VISIBLE);
-            searchEditText.requestFocus();
-            InputMethodManager imm = (InputMethodManager)
-                    getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null) imm.showSoftInput(searchEditText,
-                    InputMethodManager.SHOW_IMPLICIT);
-            historyAdapter.updateHistory(searchHistory);
+        // Historial (opcional)
+        recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
+        recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewHistory.setAdapter(new HistoryAdapter());
+
+        // Mini-player
+        cardMini        = findViewById(R.id.cardMiniPlayer);
+        miniBgBlur      = findViewById(R.id.miniBgBlur);
+        miniCover       = findViewById(R.id.miniCover);
+        miniTitle       = findViewById(R.id.miniTitle);
+        miniArtist      = findViewById(R.id.miniArtist);
+        miniCurrentTime = findViewById(R.id.miniCurrentTime);
+        miniTotalTime   = findViewById(R.id.miniTotalTime);
+        miniPrev        = findViewById(R.id.miniPrev);
+        miniPlayPause   = findViewById(R.id.miniPlayPause);
+        miniNext        = findViewById(R.id.miniNext);
+        btnSwitchMode   = findViewById(R.id.btnSwitchMode);
+
+        cardMini.setVisibility(View.GONE);
+
+        // Al pulsar el mini-player, reordena la Activity al frente sin reiniciar la pista
+        cardMini.setOnClickListener(v -> {
+            if (!serviceBound) return;
+            Intent intent = new Intent(Mp3Activity.this, ExoPlayerActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
         });
 
-        searchEditText.setOnTouchListener((v, e) -> {
-            if (e.getAction() == MotionEvent.ACTION_UP
-                    && searchEditText.getCompoundDrawables()[0] != null) {
-                int w = searchEditText.getCompoundDrawables()[0].getBounds().width();
-                if (e.getX() <= searchEditText.getPaddingLeft() + w) {
-                    searchEditText.setText("");
-                    searchEditText.setVisibility(View.GONE);
-                    recyclerViewHistory.setVisibility(View.GONE);
-                    icSearch.setVisibility(View.VISIBLE);
-                    adapter.setMp3List(mp3ListOriginal);
-                    return true;
-                }
+        // Botón anterior
+        miniPrev.setOnClickListener(v -> {
+            if (!serviceBound) return;
+            mp3Service.playPrevious();
+            miniPlayPause.setImageResource(R.drawable.ic_pause);
+        });
+
+
+        // Play/Pause
+        miniPlayPause.setOnClickListener(v -> {
+            if (!serviceBound) return;
+            Player p = mp3Service.getPlayer();
+            if (p.isPlaying()) {
+                p.pause();
+                miniPlayPause.setImageResource(R.drawable.ic_play);
+            } else {
+                p.play();
+                miniPlayPause.setImageResource(R.drawable.ic_pause);
             }
-            return false;
         });
 
-        searchEditText.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s,int st,int c,int a){}
-            @Override public void afterTextChanged(android.text.Editable s){}
-            @Override public void onTextChanged(CharSequence s,int st,int b,int c){
-                String q = s.toString().toLowerCase();
-                List<Mp3File> filt = new ArrayList<>();
-                for (Mp3File m : mp3ListOriginal) {
-                    if (m.getTitulo().toLowerCase().contains(q)
-                            || m.getArtista().toLowerCase().contains(q)) {
-                        filt.add(m);
-                    }
-                }
-                adapter.setMp3List(filt);
-            }
+        // Botón siguiente
+        miniNext.setOnClickListener(v -> {
+            if (!serviceBound) return;
+            mp3Service.playNext();
+            miniPlayPause.setImageResource(R.drawable.ic_pause);
         });
 
-        searchEditText.setOnEditorActionListener((v, actionId, ev) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                String term = v.getText().toString().trim();
-                if (!term.isEmpty() && !searchHistory.contains(term)) {
-                    searchHistory.add(0, term);
-                    historyAdapter.updateHistory(searchHistory);
-                }
-                InputMethodManager imm = (InputMethodManager)
-                        getSystemService(INPUT_METHOD_SERVICE);
-                if (imm != null) imm.hideSoftInputFromWindow(
-                        v.getWindowToken(), 0);
-                return true;
-            }
-            return false;
-        });
-
+        // Cambiar a modo MP4
         btnSwitchMode.setOnClickListener(v -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
@@ -220,7 +188,6 @@ public class Mp3Activity extends AppCompatActivity {
         fetchMp3Files();
     }
 
-    @OptIn(markerClass = UnstableApi.class)
     @Override
     protected void onStart() {
         super.onStart();
@@ -228,45 +195,52 @@ public class Mp3Activity extends AppCompatActivity {
         startService(svc);
         bindService(svc, conn, Context.BIND_AUTO_CREATE);
 
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(closeReceiver, new IntentFilter("com.example.reproductorvideos.CERRAR_APP"));
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+        lbm.registerReceiver(trackChangedReceiver,
+                new IntentFilter(MediaPlaybackMp3Service.ACTION_TRACK_CHANGED));
+        lbm.registerReceiver(closeReceiver,
+                new IntentFilter("com.example.reproductorvideos.CERRAR_APP"));
     }
 
     @Override
-    protected void onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(closeReceiver);
+    protected void onResume() {
+        super.onResume();
+        miniHandler.post(timeUpdater);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        miniHandler.removeCallbacks(timeUpdater);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+        lbm.unregisterReceiver(trackChangedReceiver);
+        lbm.unregisterReceiver(closeReceiver);
         if (serviceBound) {
             unbindService(conn);
             serviceBound = false;
         }
-        super.onDestroy();
     }
 
     private void fetchMp3Files() {
         RetrofitClient.getApiService(this)
                 .obtenerMp3()
                 .enqueue(new Callback<List<Mp3File>>() {
-                    @OptIn(markerClass = UnstableApi.class)
-                    @Override
-                    public void onResponse(Call<List<Mp3File>> call,
-                                           Response<List<Mp3File>> resp) {
+                    @Override public void onResponse(Call<List<Mp3File>> call,
+                                                     Response<List<Mp3File>> resp) {
                         if (resp.isSuccessful() && resp.body() != null) {
                             mp3ListOriginal = resp.body();
-                            Executors.newSingleThreadExecutor().execute(() -> {
-                                for (Mp3File m : mp3ListOriginal) {
-                                    m.setArtworkData(getAlbumArt(m.getUrl()));
-                                }
-                                runOnUiThread(() -> {
-                                    adapter.setMp3List(mp3ListOriginal);
-                                });
-                            });
+                            adapter.setMp3List(mp3ListOriginal);
                         } else {
                             Toast.makeText(Mp3Activity.this,
                                     "Error al cargar MP3", Toast.LENGTH_SHORT).show();
                         }
                     }
-                    @Override
-                    public void onFailure(Call<List<Mp3File>> call, Throwable t) {
+                    @Override public void onFailure(Call<List<Mp3File>> call, Throwable t) {
                         Toast.makeText(Mp3Activity.this,
                                 "Fallo red: " + t.getMessage(),
                                 Toast.LENGTH_LONG).show();
@@ -274,49 +248,100 @@ public class Mp3Activity extends AppCompatActivity {
                 });
     }
 
-    private byte[] getAlbumArt(String uri) {
-        MediaMetadataRetriever r = new MediaMetadataRetriever();
-        try {
-            r.setDataSource(uri, new HashMap<>());
-            return r.getEmbeddedPicture();
-        } catch (Exception e) {
-            return null;
-        } finally {
-            try { r.release(); } catch (Exception ignored) {}
+    /** Actualiza título, artista, carátula y fondo difuminado */
+    private void updateMiniMetadata() {
+        if (!serviceBound) return;
+        Player p = mp3Service.getPlayer();
+        List<Mp3File> pl = mp3Service.getPlaylist();
+        if (pl == null || pl.isEmpty() || p.getMediaItemCount() == 0) {
+            cardMini.setVisibility(View.GONE);
+            return;
+        }
+        cardMini.setVisibility(View.VISIBLE);
+
+        Mp3File m = pl.get(p.getCurrentMediaItemIndex());
+        miniTitle.setText(m.getTitulo());
+        miniArtist.setText(m.getArtista());
+
+        byte[] art = m.getArtworkData();
+        if (art != null && art.length > 0) {
+            Bitmap bmp = BitmapFactory.decodeByteArray(art, 0, art.length);
+            applyMiniCoverAndBlur(bmp);
+        } else if (m.getCoverUrl() != null && !m.getCoverUrl().isEmpty()) {
+            Glide.with(this)
+                    .asBitmap()
+                    .load(m.getCoverUrl())
+                    .into(new CustomTarget<Bitmap>() {
+                        @Override public void onResourceReady(@NonNull Bitmap bmp,
+                                                              @Nullable Transition<? super Bitmap> t) {
+                            applyMiniCoverAndBlur(bmp);
+                        }
+                        @Override public void onLoadCleared(@Nullable Drawable ph) {}
+                    });
+        } else {
+            Bitmap ph = BitmapFactory.decodeResource(
+                    getResources(), R.drawable.default_cover);
+            applyMiniCoverAndBlur(ph);
         }
     }
 
+    private void applyMiniCoverAndBlur(Bitmap bmp) {
+        miniCover.setImageBitmap(bmp);
+        Glide.with(this)
+                .load(bmp)
+                .apply(RequestOptions.bitmapTransform(new BlurTransformation(15,3)))
+                .into(miniBgBlur);
+    }
+
+    private String formattedTime(int s) {
+        int m = s / 60, sec = s % 60;
+        return String.format("%d:%02d", m, sec);
+    }
+
+    /** Para que Mp3Adapter sepa que el servicio está listo */
+    public boolean isServiceBound() {
+        return serviceBound;
+    }
+
+    /** Adapter interno para historial de búsqueda */
     private static class HistoryAdapter
             extends RecyclerView.Adapter<HistoryAdapter.HViewHolder> {
         private final List<String> items = new ArrayList<>();
         void updateHistory(List<String> data) {
-            items.clear(); items.addAll(data); notifyDataSetChanged();
+            items.clear();
+            items.addAll(data);
+            notifyDataSetChanged();
         }
         @NonNull @Override
-        public HViewHolder onCreateViewHolder(@NonNull ViewGroup p, int v){
+        public HViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             TextView tv = (TextView) LayoutInflater
-                    .from(p.getContext())
-                    .inflate(android.R.layout.simple_list_item_1,p,false);
-            tv.setTextColor(Color.WHITE);
+                    .from(parent.getContext())
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+            tv.setTextColor(0xFFFFFFFF);
             return new HViewHolder(tv);
         }
-        @Override public void onBindViewHolder(@NonNull HViewHolder h,int pos){
-            String text = items.get(pos);
-            h.tv.setText(text);
-            h.tv.setOnClickListener(v -> {
+        @Override
+        public void onBindViewHolder(@NonNull HViewHolder holder, int position) {
+            String txt = items.get(position);
+            holder.tv.setText(txt);
+            holder.tv.setOnClickListener(v -> {
                 EditText et = ((Activity)v.getContext())
                         .findViewById(R.id.searchEditText);
-                et.setText(text);
-                et.setSelection(text.length());
-                ((Mp3Activity)v.getContext()).adapter.setMp3List(
-                        ((Mp3Activity)v.getContext()).mp3ListOriginal
-                );
+                et.setText(txt);
+                et.setSelection(txt.length());
+                ((Mp3Activity)v.getContext()).adapter
+                        .setMp3List(((Mp3Activity)v.getContext()).mp3ListOriginal);
             });
         }
-        @Override public int getItemCount(){ return items.size(); }
+        @Override public int getItemCount() {
+            return items.size();
+        }
         static class HViewHolder extends RecyclerView.ViewHolder {
             final TextView tv;
-            HViewHolder(TextView v){ super(v); tv = v;}
+            HViewHolder(TextView v) {
+                super(v);
+                tv = v;
+            }
         }
     }
 }

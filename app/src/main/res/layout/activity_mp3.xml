@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
+    android:id="@+id/rootMp3"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#121212"
     tools:context=".Mp3Activity">
 
@@ -16,62 +16,39 @@
         android:orientation="horizontal"
         android:padding="10dp"
         android:gravity="center_vertical"
-        android:background="#121212"
-        android:elevation="4dp">
+        android:background="#121212">
 
+        <!-- aquí van tus iconos y el EditText, igual que en MainActivity -->
         <ImageView
             android:id="@+id/logoImageView"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/icredlucia"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="Logo" />
+            android:src="@drawable/icredlucia" />
 
         <ImageView
             android:id="@+id/ic_Search"
             android:layout_width="35dp"
             android:layout_height="35dp"
-            android:src="@drawable/ic_search"
-            app:tint="#FFFFFF"
-            android:contentDescription="Buscar" />
+            android:src="@drawable/ic_search" />
 
         <EditText
             android:id="@+id/searchEditText"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
             android:hint="Buscar MP3"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/search_bar_background"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:drawableStart="@drawable/ic_search_small"
-            android:drawablePadding="8dp"
-            android:inputType="text"
-            android:singleLine="true"
+            android:visibility="gone"
             android:imeOptions="actionSearch"
-            android:visibility="gone" />
+            android:singleLine="true"/>
 
-        <ImageView
-            android:id="@+id/micIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="12dp"
-            android:src="@drawable/ic_mic"
-            app:tint="#FFFFFF"
-            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Historial de búsqueda (si lo usas para mp3 también) -->
+    <!-- Historial de búsqueda -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewHistory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:visibility="gone"
-        tools:listitem="@layout/item_search_history"
-        android:paddingHorizontal="8dp" />
+        android:visibility="gone"/>
 
     <!-- Lista de MP3 -->
     <androidx.recyclerview.widget.RecyclerView
@@ -79,28 +56,26 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="8dp"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
-        android:contentDescription="Lista de archivos MP3"
-        tools:listitem="@layout/item_mp3" />
+        android:paddingBottom="16dp"/>
+
+    <!-- Mini‐player (oculto por defecto) -->
+    <include
+        android:id="@+id/cardMiniPlayer"
+        layout="@layout/mini_player"
+        android:visibility="gone" />
 
     <!-- Botón para cambiar a modo video -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp">
+        android:layout_margin="16dp">
 
         <Button
             android:id="@+id/btnSwitchMode"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:text="MP4"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#FF4081"
-            android:background="@drawable/round_button"
-            android:elevation="6dp"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"/>
     </FrameLayout>
 
 </LinearLayout>
