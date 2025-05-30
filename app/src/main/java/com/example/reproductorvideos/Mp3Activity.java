@@ -1,4 +1,3 @@
-// src/main/java/com/example/reproductorvideos/Mp3Activity.java
 package com.example.reproductorvideos;
 
 import android.app.Activity;
@@ -14,11 +13,15 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +58,12 @@ public class Mp3Activity extends AppCompatActivity {
     private Mp3Adapter adapter;
     private List<Mp3File> mp3ListOriginal = new ArrayList<>();
 
+    // Vistas de búsqueda
+    private ImageView icSearch, icClose;
+    private EditText searchEditText;
+    private HistoryAdapter historyAdapter;
+    private final List<String> searchHistory = new ArrayList<>();
+
     private MediaPlaybackMp3Service mp3Service;
     private boolean serviceBound = false;
 
@@ -62,34 +71,34 @@ public class Mp3Activity extends AppCompatActivity {
     private View cardMini;
     private ImageView miniBgBlur, miniCover, miniPrev, miniPlayPause, miniNext;
     private TextView miniTitle, miniArtist, miniCurrentTime, miniTotalTime;
-    private Button btnSwitchMode;
+    private ImageButton btnVideos, btnMp3;
 
     // Handler para actualizar solo el tiempo cada segundo
     private final Handler miniHandler = new Handler();
     private final Runnable timeUpdater = new Runnable() {
-        @Override public void run() {
+        @Override
+        public void run() {
             if (!serviceBound) return;
             Player p = mp3Service.getPlayer();
-            int cur = (int)(p.getCurrentPosition()/1000);
+            int cur = (int)(p.getCurrentPosition() / 1000);
             miniCurrentTime.setText(formattedTime(cur));
             long durMs = p.getDuration();
             if (durMs > 0) {
-                miniTotalTime.setText(formattedTime((int)(durMs/1000)));
+                miniTotalTime.setText(formattedTime((int)(durMs / 1000)));
             }
             miniPlayPause.setImageResource(
                     p.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play
             );
+            // reprograma este mismo Runnable usando 'this'
             miniHandler.postDelayed(this, 1000);
         }
     };
 
-    // Receiver para cambios de pista
     private final BroadcastReceiver trackChangedReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context ctx, Intent intent) {
             updateMiniMetadata();
         }
     };
-    // Receiver para cerrar app
     private final BroadcastReceiver closeReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context ctx, Intent intent) {
             if (serviceBound) {
@@ -100,7 +109,6 @@ public class Mp3Activity extends AppCompatActivity {
         }
     };
 
-    // Conexión al servicio de reproducción
     private final ServiceConnection conn = new ServiceConnection() {
         @Override public void onServiceConnected(ComponentName name, IBinder binder) {
             mp3Service = ((MediaPlaybackMp3Service.LocalBinder) binder).getService();
@@ -117,19 +125,44 @@ public class Mp3Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mp3);
 
-        // Lista de MP3
+        // RecyclerView de MP3
         recyclerViewMp3 = findViewById(R.id.recyclerViewMp3);
         recyclerViewMp3.setLayoutManager(new LinearLayoutManager(this));
         adapter = new Mp3Adapter(this);
         recyclerViewMp3.setAdapter(adapter);
 
-        // Historial (opcional)
+        // Historial de búsqueda
         recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
         recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewHistory.setAdapter(new HistoryAdapter());
+        historyAdapter = new HistoryAdapter();
+        recyclerViewHistory.setAdapter(historyAdapter);
 
-        // Mini-player
-        cardMini        = findViewById(R.id.cardMiniPlayer);
+        // Inicialización buscador
+        icSearch       = findViewById(R.id.ic_Search);
+        icClose        = findViewById(R.id.ic_Close);
+        searchEditText = findViewById(R.id.searchEditText);
+
+        searchEditText.setVisibility(View.GONE);
+        recyclerViewHistory.setVisibility(View.GONE);
+        icClose.setVisibility(View.GONE);
+
+        // Botones de modo
+        btnVideos = findViewById(R.id.btnVideos);
+        btnMp3    = findViewById(R.id.btnMp3);
+        btnVideos.setImageResource(R.drawable.ic_video_off);
+        btnMp3   .setImageResource(R.drawable.ic_music_on);
+        btnVideos.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            overridePendingTransition(
+                    R.anim.slide_in_left, R.anim.slide_out_right
+            );
+            finish();
+        });
+
+        // Mini-player oculto
+        cardMini = findViewById(R.id.cardMiniPlayer);
+        cardMini.setVisibility(View.GONE);
         miniBgBlur      = findViewById(R.id.miniBgBlur);
         miniCover       = findViewById(R.id.miniCover);
         miniTitle       = findViewById(R.id.miniTitle);
@@ -139,27 +172,12 @@ public class Mp3Activity extends AppCompatActivity {
         miniPrev        = findViewById(R.id.miniPrev);
         miniPlayPause   = findViewById(R.id.miniPlayPause);
         miniNext        = findViewById(R.id.miniNext);
-        btnSwitchMode   = findViewById(R.id.btnSwitchMode);
 
-        cardMini.setVisibility(View.GONE);
-
-        // Al pulsar el mini-player, reordena la Activity al frente sin reiniciar la pista
-        cardMini.setOnClickListener(v -> {
-            if (!serviceBound) return;
-            Intent intent = new Intent(Mp3Activity.this, ExoPlayerActivity.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            startActivity(intent);
-        });
-
-        // Botón anterior
         miniPrev.setOnClickListener(v -> {
             if (!serviceBound) return;
             mp3Service.playPrevious();
             miniPlayPause.setImageResource(R.drawable.ic_pause);
         });
-
-
-        // Play/Pause
         miniPlayPause.setOnClickListener(v -> {
             if (!serviceBound) return;
             Player p = mp3Service.getPlayer();
@@ -171,18 +189,62 @@ public class Mp3Activity extends AppCompatActivity {
                 miniPlayPause.setImageResource(R.drawable.ic_pause);
             }
         });
-
-        // Botón siguiente
         miniNext.setOnClickListener(v -> {
             if (!serviceBound) return;
             mp3Service.playNext();
             miniPlayPause.setImageResource(R.drawable.ic_pause);
         });
+        cardMini.setOnClickListener(v -> {
+            if (!serviceBound) return;
+            startActivity(new Intent(Mp3Activity.this, ExoPlayerActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+        });
 
-        // Cambiar a modo MP4
-        btnSwitchMode.setOnClickListener(v -> {
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
+        // Apertura del buscador
+        icSearch.setOnClickListener(v -> {
+            icSearch.setVisibility(View.GONE);
+            searchEditText.setVisibility(View.VISIBLE);
+            recyclerViewHistory.setVisibility(View.VISIBLE);
+            icClose.setVisibility(View.VISIBLE);
+
+            searchEditText.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
+
+            historyAdapter.updateHistory(searchHistory);
+        });
+
+        // Cierre del buscador
+        icClose.setOnClickListener(v -> {
+            searchEditText.setText("");
+            searchEditText.setVisibility(View.GONE);
+            recyclerViewHistory.setVisibility(View.GONE);
+            icClose.setVisibility(View.GONE);
+            icSearch.setVisibility(View.VISIBLE);
+        });
+
+        // Filtrado en tiempo real
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void onTextChanged(CharSequence s, int st, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                filtrarMp3(s.toString());
+            }
+        });
+
+        // Guardar término en historial
+        searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                String term = searchEditText.getText().toString().trim();
+                if (!term.isEmpty() && !searchHistory.contains(term)) {
+                    searchHistory.add(0, term);
+                    historyAdapter.updateHistory(searchHistory);
+                }
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null) imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+                return true;
+            }
+            return false;
         });
 
         fetchMp3Files();
@@ -248,7 +310,18 @@ public class Mp3Activity extends AppCompatActivity {
                 });
     }
 
-    /** Actualiza título, artista, carátula y fondo difuminado */
+    private void filtrarMp3(String query) {
+        if (mp3ListOriginal == null) return;
+        List<Mp3File> filtrados = new ArrayList<>();
+        for (Mp3File mp3 : mp3ListOriginal) {
+            if (mp3.getTitulo().toLowerCase().contains(query.toLowerCase())
+                    || mp3.getArtista().toLowerCase().contains(query.toLowerCase())) {
+                filtrados.add(mp3);
+            }
+        }
+        adapter.setMp3List(filtrados);
+    }
+
     private void updateMiniMetadata() {
         if (!serviceBound) return;
         Player p = mp3Service.getPlayer();
@@ -258,7 +331,6 @@ public class Mp3Activity extends AppCompatActivity {
             return;
         }
         cardMini.setVisibility(View.VISIBLE);
-
         Mp3File m = pl.get(p.getCurrentMediaItemIndex());
         miniTitle.setText(m.getTitulo());
         miniArtist.setText(m.getArtista());
@@ -298,12 +370,10 @@ public class Mp3Activity extends AppCompatActivity {
         return String.format("%d:%02d", m, sec);
     }
 
-    /** Para que Mp3Adapter sepa que el servicio está listo */
     public boolean isServiceBound() {
         return serviceBound;
     }
 
-    /** Adapter interno para historial de búsqueda */
     private static class HistoryAdapter
             extends RecyclerView.Adapter<HistoryAdapter.HViewHolder> {
         private final List<String> items = new ArrayList<>();

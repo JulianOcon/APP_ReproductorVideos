@@ -8,7 +8,7 @@
     android:background="#121212"
     tools:context=".MainActivity">
 
-    <!-- Encabezado estilo YouTube: solo lupa visible al inicio -->
+    <!-- Encabezado estilo YouTube, igual que en Mp3Activity -->
     <LinearLayout
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
@@ -16,43 +16,41 @@
         android:orientation="horizontal"
         android:padding="10dp"
         android:gravity="center_vertical"
-        android:background="#121212"
-        android:elevation="4dp">
-        
+        android:background="#121212">
+
+        <!-- logo -->
         <ImageView
             android:id="@+id/logoImageView"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/icredlucia"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="Logo" />
+            android:src="@drawable/icredlucia" />
 
         <ImageView
             android:id="@+id/ic_Search"
             android:layout_width="35dp"
             android:layout_height="35dp"
-            android:src="@drawable/ic_search"
-            app:tint="#FFFFFF"
-            android:contentDescription="Buscar"/>
+            android:src="@drawable/ic_search" />
 
-
+        <!-- caja de texto oculta hasta pulsar lupa -->
         <EditText
             android:id="@+id/searchEditText"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:hint="Buscar en PlayerLucia"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/search_bar_background"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:drawableStart="@drawable/ic_search_small"
-            android:drawablePadding="8dp"
-            android:inputType="text"
-            android:singleLine="true"
+            android:hint="Buscar MP3"
+            android:visibility="gone"
             android:imeOptions="actionSearch"
-            android:visibility="gone" />
+            android:singleLine="true"/>
+
+        <!-- botón X para cerrar la búsqueda -->
+        <ImageView
+            android:id="@+id/ic_Close"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_close"
+            android:visibility="gone"
+            android:contentDescription="Cerrar búsqueda"/>
 
         <ImageView
             android:id="@+id/micIcon"
@@ -95,23 +93,8 @@
         android:paddingBottom="16dp"
         android:contentDescription="Lista de videos disponibles"
         tools:listitem="@layout/video_item" />
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp">
-
-        <Button
-            android:id="@+id/btnSwitchMode"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:text="MP3"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#FF4081"
-            android:background="@drawable/round_button"
-            android:elevation="6dp"
-            android:layout_gravity="center" />
-    </FrameLayout>
 
 
+    <include layout="@layout/include_bottom_bar"/>
 
 </LinearLayout>

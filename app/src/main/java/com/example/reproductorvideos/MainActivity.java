@@ -7,13 +7,12 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -44,14 +43,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerView, recyclerViewHistory;
     private VideoAdapter adapter;
-    private RecyclerView recyclerViewHistory;
     private HistoryAdapter historyAdapter;
     private EditText searchEditText;
-    private ImageView icSearch, logoImageView;
+    private ImageView icSearch, icClose, logoImageView;
     private SharedPreferences prefs;
-    private Button btnSwitchMode;
+    private ImageButton btnVideos, btnMp3;
 
     private List<Video> videoListOriginal;
     private final List<String> searchHistory = new ArrayList<>();
@@ -60,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
+        // autenticación
         prefs = getSharedPreferences("APP_PREFS", MODE_PRIVATE);
         String token = prefs.getString("jwt_token", null);
         if (token == null) {
@@ -69,41 +69,37 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_main);
+        // vistas
+        logoImageView      = findViewById(R.id.logoImageView);
+        icSearch           = findViewById(R.id.ic_Search);
+        icClose            = findViewById(R.id.ic_Close);
+        searchEditText     = findViewById(R.id.searchEditText);
+        recyclerViewHistory= findViewById(R.id.recyclerViewHistory);
+        recyclerView       = findViewById(R.id.recyclerView);
+        btnVideos          = findViewById(R.id.btnVideos);
+        btnMp3             = findViewById(R.id.btnMp3);
 
-        logoImageView = findViewById(R.id.logoImageView);
-        icSearch = findViewById(R.id.ic_Search);
-        searchEditText = findViewById(R.id.searchEditText);
-        btnSwitchMode = findViewById(R.id.btnSwitchMode);
-
-        int iconSizePx = getResources().getDimensionPixelSize(R.dimen.search_icon_size);
-        Drawable[] drawables = searchEditText.getCompoundDrawables();
-        Drawable left = drawables[0];
-        if (left != null) {
-            left.setBounds(0, 0, iconSizePx, iconSizePx);
-            searchEditText.setCompoundDrawables(left, drawables[1], drawables[2], drawables[3]);
-        }
-
-        recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
-        recyclerView = findViewById(R.id.recyclerView);
-
-        logoImageView.setOnClickListener(v -> {
-            PopupMenu popup = new PopupMenu(MainActivity.this, v);
-            popup.getMenu().add("Cerrar sesión");
-            popup.setOnMenuItemClickListener(item -> {
-                if ("Cerrar sesión".equals(item.getTitle())) {
-                    prefs.edit().remove("jwt_token").apply();
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                    finishAffinity();
-                }
-                return true;
-            });
-            popup.show();
+        // botones de modo
+        btnVideos.setImageResource(R.drawable.ic_video_on);
+        btnMp3   .setImageResource(R.drawable.ic_music_off);
+        btnVideos.setOnClickListener(v -> {
+            // ya estás aquí
+        });
+        btnMp3.setOnClickListener(v -> {
+            startActivity(new Intent(this, Mp3Activity.class));
+            overridePendingTransition(R.anim.slide_in_rigth, R.anim.slide_out_left);
+            finish();
         });
 
-        searchEditText.setVisibility(View.GONE);
-        recyclerViewHistory.setVisibility(View.GONE);
+        // ajusta el tamaño del drawable del EditText
+        int iconSizePx = getResources().getDimensionPixelSize(R.dimen.search_icon_size);
+        Drawable[] drawables = searchEditText.getCompoundDrawables();
+        if (drawables[0] != null) {
+            drawables[0].setBounds(0, 0, iconSizePx, iconSizePx);
+            searchEditText.setCompoundDrawables(drawables[0], drawables[1], drawables[2], drawables[3]);
+        }
 
+        // configura RecyclerViews
         recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
         historyAdapter = new HistoryAdapter();
         recyclerViewHistory.setAdapter(historyAdapter);
@@ -112,8 +108,28 @@ public class MainActivity extends AppCompatActivity {
         adapter = new VideoAdapter(this, new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
+        // menú cerrar sesión
+        logoImageView.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(this, v);
+            popup.getMenu().add("Cerrar sesión");
+            popup.setOnMenuItemClickListener(item -> {
+                prefs.edit().remove("jwt_token").apply();
+                startActivity(new Intent(this, LoginActivity.class));
+                finishAffinity();
+                return true;
+            });
+            popup.show();
+        });
+
+        // inicialmente oculta la búsqueda
+        searchEditText.setVisibility(View.GONE);
+        recyclerViewHistory.setVisibility(View.GONE);
+        icClose.setVisibility(View.GONE);
+
+        // abrir buscador
         icSearch.setOnClickListener(v -> {
             icSearch.setVisibility(View.GONE);
+            icClose.setVisibility(View.VISIBLE);
             searchEditText.setVisibility(View.VISIBLE);
             recyclerViewHistory.setVisibility(View.VISIBLE);
             searchEditText.requestFocus();
@@ -122,28 +138,25 @@ public class MainActivity extends AppCompatActivity {
             historyAdapter.updateHistory(searchHistory);
         });
 
-        searchEditText.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP && searchEditText.getCompoundDrawables()[0] != null) {
-                int width = searchEditText.getCompoundDrawables()[0].getBounds().width();
-                if (event.getX() <= searchEditText.getPaddingLeft() + width) {
-                    searchEditText.setText("");
-                    searchEditText.setVisibility(View.GONE);
-                    recyclerViewHistory.setVisibility(View.GONE);
-                    icSearch.setVisibility(View.VISIBLE);
-                    return true;
-                }
-            }
-            return false;
+        // cerrar buscador
+        icClose.setOnClickListener(v -> {
+            searchEditText.setText("");
+            searchEditText.setVisibility(View.GONE);
+            recyclerViewHistory.setVisibility(View.GONE);
+            icClose.setVisibility(View.GONE);
+            icSearch.setVisibility(View.VISIBLE);
         });
 
+        // filtrar a medida que escribe
         searchEditText.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void afterTextChanged(android.text.Editable s) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(android.text.Editable s) {
                 filtrarVideos(s.toString());
             }
         });
 
+        // guardar término en historial al buscar
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String term = searchEditText.getText().toString().trim();
@@ -158,11 +171,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        btnSwitchMode.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, Mp3Activity.class);
-            startActivity(intent);
-        });
-
+        // carga vídeos
         fetchServerIpAndVideos();
     }
 
@@ -181,7 +190,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override public void onFailure(Call<ServerInfo> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error IP: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,
+                        "Error IP: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -198,11 +208,13 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(MainActivity.this, LoginActivity.class));
                     finish();
                 } else {
-                    Toast.makeText(MainActivity.this, "Error videos: " + resp.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this,
+                            "Error videos: " + resp.code(), Toast.LENGTH_SHORT).show();
                 }
             }
             @Override public void onFailure(Call<List<Video>> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Fallo red: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,
+                        "Fallo red: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -211,30 +223,43 @@ public class MainActivity extends AppCompatActivity {
         if (videoListOriginal == null) return;
         List<Video> filtrados = new ArrayList<>();
         for (Video v : videoListOriginal) {
-            if (v.getTitle().toLowerCase().contains(query.toLowerCase())) filtrados.add(v);
+            if (v.getTitle().toLowerCase().contains(query.toLowerCase())) {
+                filtrados.add(v);
+            }
         }
         adapter.actualizarLista(filtrados);
     }
 
-    private static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HViewHolder> {
-        private List<String> items = new ArrayList<>();
-        void updateHistory(List<String> data) { items.clear(); items.addAll(data); notifyDataSetChanged(); }
-        @NonNull @Override public HViewHolder onCreateViewHolder(@NonNull ViewGroup p, int v) {
+    private static class HistoryAdapter
+            extends RecyclerView.Adapter<HistoryAdapter.HViewHolder> {
+        private final List<String> items = new ArrayList<>();
+        void updateHistory(List<String> data) {
+            items.clear();
+            items.addAll(data);
+            notifyDataSetChanged();
+        }
+        @NonNull @Override
+        public HViewHolder onCreateViewHolder(@NonNull ViewGroup p, int viewType) {
             TextView tv = (TextView) LayoutInflater.from(p.getContext())
                     .inflate(android.R.layout.simple_list_item_1, p, false);
             tv.setTextColor(Color.WHITE);
             return new HViewHolder(tv);
         }
-        @Override public void onBindViewHolder(@NonNull HViewHolder h, int pos) {
+        @Override
+        public void onBindViewHolder(@NonNull HViewHolder h, int pos) {
             String text = items.get(pos);
             h.tv.setText(text);
             h.tv.setOnClickListener(v -> {
-                EditText et = ((Activity) v.getContext()).findViewById(R.id.searchEditText);
+                EditText et = ((Activity) v.getContext())
+                        .findViewById(R.id.searchEditText);
                 et.setText(text);
                 et.setSelection(text.length());
             });
         }
         @Override public int getItemCount() { return items.size(); }
-        static class HViewHolder extends RecyclerView.ViewHolder { TextView tv; HViewHolder(TextView v){ super(v); tv=v;} }
+        static class HViewHolder extends RecyclerView.ViewHolder {
+            final TextView tv;
+            HViewHolder(TextView v) { super(v); tv = v; }
+        }
     }
 }

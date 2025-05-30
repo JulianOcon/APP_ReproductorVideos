@@ -41,6 +41,15 @@
             android:imeOptions="actionSearch"
             android:singleLine="true"/>
 
+        <ImageView
+            android:id="@+id/ic_Close"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_close"
+            android:layout_marginStart="8dp"
+            android:visibility="gone"
+            android:contentDescription="Cerrar búsqueda"/>
+
     </LinearLayout>
 
     <!-- Historial de búsqueda -->
@@ -64,18 +73,7 @@
         layout="@layout/mini_player"
         android:visibility="gone" />
 
-    <!-- Botón para cambiar a modo video -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp">
 
-        <Button
-            android:id="@+id/btnSwitchMode"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:text="MP4"
-            android:layout_gravity="center"/>
-    </FrameLayout>
 
+    <include layout="@layout/include_bottom_bar"/>
 </LinearLayout>

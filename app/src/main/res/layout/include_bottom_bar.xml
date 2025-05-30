@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottomBar"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:background="#121212"
+    android:gravity="center">
+
+    <ImageButton
+        android:id="@+id/btnVideos"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/ic_video_off"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Modo Videos" />
+
+    <ImageButton
+        android:id="@+id/btnMp3"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/ic_music_off"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Modo MP3" />
+
+</LinearLayout>

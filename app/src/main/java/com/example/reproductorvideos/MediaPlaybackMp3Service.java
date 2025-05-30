@@ -245,7 +245,7 @@ public class MediaPlaybackMp3Service extends Service {
     private Notification buildDummyNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Reproduciendo MP3")
-                .setSmallIcon(R.drawable.ic_music_note)
+                .setSmallIcon(R.drawable.ic_music_off)
                 .build();
     }
 
@@ -326,7 +326,7 @@ public class MediaPlaybackMp3Service extends Service {
     }
 
     /**
-     * Anterior: si hay historial, vuelve a esa pista; si no, secuencial.
+     * Anterior: si hay historial, vuelve a esa pista y si no, secuencial.
      */
     public void playPrevious() {
         if (exoPlayer == null || playlist.isEmpty()) return;
