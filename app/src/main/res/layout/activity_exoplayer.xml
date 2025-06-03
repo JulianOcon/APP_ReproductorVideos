@@ -2,34 +2,36 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000">
 
-    <!-- Fondo desenfocado -->
+
     <ImageView
         android:id="@+id/bg_blur"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scaleType="centerCrop"
         android:alpha="0.6"
-        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="Fondo desenfocado"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="Fondo desenfocado" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
-    <!-- Botón atrás -->
     <ImageView
         android:id="@+id/back_btn"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_margin="16dp"
         android:src="@drawable/ic_chevron_left"
-        app:tint="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:tint="@android:color/white" />
 
     <!-- Título -->
     <TextView
@@ -161,6 +163,20 @@
             android:src="@drawable/ic_repeat_off"
             app:tint="@android:color/white" />
 
+        <ImageButton
+            android:id="@+id/btnFavoritoRepro"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="24dp"
+            android:src="@drawable/ic_fav_off"
+            android:contentDescription="Favorito"
+            android:background="@android:color/transparent"
+            app:tint="@android:color/white" />
+
+
     </LinearLayout>
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

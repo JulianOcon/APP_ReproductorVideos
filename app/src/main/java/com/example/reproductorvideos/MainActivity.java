@@ -31,6 +31,7 @@ import com.example.reproductorvideos.network.IPService;
 import com.example.reproductorvideos.network.RetrofitClient;
 import com.example.reproductorvideos.network.ServerInfo;
 import com.example.reproductorvideos.ui.VideoAdapter;
+import com.example.reproductorvideos.utils.FavoritosManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences prefs;
     private ImageButton btnVideos, btnMp3;
 
+    private ImageView btnVerFavoritos;
+
     private List<Video> videoListOriginal;
     private final List<String> searchHistory = new ArrayList<>();
 
@@ -70,20 +73,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // vistas
-        logoImageView      = findViewById(R.id.logoImageView);
-        icSearch           = findViewById(R.id.ic_Search);
-        icClose            = findViewById(R.id.ic_Close);
-        searchEditText     = findViewById(R.id.searchEditText);
-        recyclerViewHistory= findViewById(R.id.recyclerViewHistory);
-        recyclerView       = findViewById(R.id.recyclerView);
-        btnVideos          = findViewById(R.id.btnVideos);
-        btnMp3             = findViewById(R.id.btnMp3);
+        logoImageView       = findViewById(R.id.logoImageView);
+        icSearch            = findViewById(R.id.ic_Search);
+        icClose             = findViewById(R.id.ic_Close);
+        searchEditText      = findViewById(R.id.searchEditText);
+        recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
+        recyclerView        = findViewById(R.id.recyclerView);
+        btnVideos           = findViewById(R.id.btnVideos);
+        btnMp3              = findViewById(R.id.btnMp3);
+        btnVerFavoritos     = findViewById(R.id.btnVerFavoritos);
 
-        // botones de modo
+        btnVerFavoritos.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, FavoritosActivity.class));
+        });
+
         btnVideos.setImageResource(R.drawable.ic_video_on);
-        btnMp3   .setImageResource(R.drawable.ic_music_off);
+        btnMp3.setImageResource(R.drawable.ic_music_off);
         btnVideos.setOnClickListener(v -> {
-            // ya estás aquí
         });
         btnMp3.setOnClickListener(v -> {
             startActivity(new Intent(this, Mp3Activity.class));
@@ -91,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
 
-        // ajusta el tamaño del drawable del EditText
         int iconSizePx = getResources().getDimensionPixelSize(R.dimen.search_icon_size);
         Drawable[] drawables = searchEditText.getCompoundDrawables();
         if (drawables[0] != null) {
@@ -99,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
             searchEditText.setCompoundDrawables(drawables[0], drawables[1], drawables[2], drawables[3]);
         }
 
-        // configura RecyclerViews
         recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
         historyAdapter = new HistoryAdapter();
         recyclerViewHistory.setAdapter(historyAdapter);
@@ -108,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
         adapter = new VideoAdapter(this, new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
-        // menú cerrar sesión
         logoImageView.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(this, v);
             popup.getMenu().add("Cerrar sesión");
@@ -121,12 +124,10 @@ public class MainActivity extends AppCompatActivity {
             popup.show();
         });
 
-        // inicialmente oculta la búsqueda
         searchEditText.setVisibility(View.GONE);
         recyclerViewHistory.setVisibility(View.GONE);
         icClose.setVisibility(View.GONE);
 
-        // abrir buscador
         icSearch.setOnClickListener(v -> {
             icSearch.setVisibility(View.GONE);
             icClose.setVisibility(View.VISIBLE);
@@ -138,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
             historyAdapter.updateHistory(searchHistory);
         });
 
-        // cerrar buscador
         icClose.setOnClickListener(v -> {
             searchEditText.setText("");
             searchEditText.setVisibility(View.GONE);
@@ -147,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
             icSearch.setVisibility(View.VISIBLE);
         });
 
-        // filtrar a medida que escribe
         searchEditText.addTextChangedListener(new android.text.TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
@@ -156,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // guardar término en historial al buscar
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String term = searchEditText.getText().toString().trim();
@@ -171,13 +169,12 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // carga vídeos
         fetchServerIpAndVideos();
     }
 
     private void fetchServerIpAndVideos() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.12:3000/api/")
+                .baseUrl("http://192.168.1.9:3000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         IPService ipService = retrofit.create(IPService.class);
@@ -202,6 +199,9 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onResponse(Call<List<Video>> call, Response<List<Video>> resp) {
                 if (resp.isSuccessful() && resp.body() != null) {
                     videoListOriginal = resp.body();
+                    for (Video v : videoListOriginal) {
+                        v.setFavorito(FavoritosManager.esFavorito(MainActivity.this, v.getUrl()));
+                    }
                     adapter.actualizarLista(new ArrayList<>(videoListOriginal));
                 } else if (resp.code() == 401) {
                     prefs.edit().remove("jwt_token").apply();
@@ -245,8 +245,7 @@ public class MainActivity extends AppCompatActivity {
             tv.setTextColor(Color.WHITE);
             return new HViewHolder(tv);
         }
-        @Override
-        public void onBindViewHolder(@NonNull HViewHolder h, int pos) {
+        @Override public void onBindViewHolder(@NonNull HViewHolder h, int pos) {
             String text = items.get(pos);
             h.tv.setText(text);
             h.tv.setOnClickListener(v -> {
@@ -261,5 +260,14 @@ public class MainActivity extends AppCompatActivity {
             final TextView tv;
             HViewHolder(TextView v) { super(v); tv = v; }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+
     }
 }

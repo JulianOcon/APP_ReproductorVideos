@@ -53,6 +53,8 @@
 
         <!-- Otras pantallas -->
         <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".FavoritosActivity" />
+        <activity android:name=".FavoritosMp3Activity" />
         <activity android:name=".CategoriasActivity" android:exported="false" />
         <activity android:name=".RegisterActivity" android:exported="false" />
         <activity android:name=".ReproducirActivity" android:exported="false" />

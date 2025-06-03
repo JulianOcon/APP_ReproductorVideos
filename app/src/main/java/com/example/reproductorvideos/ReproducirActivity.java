@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.OptIn;
@@ -27,6 +28,7 @@ import com.example.reproductorvideos.model.Video;
 import com.example.reproductorvideos.network.ApiService;
 import com.example.reproductorvideos.network.RetrofitClient;
 import com.example.reproductorvideos.ui.VideoAdapter;
+import com.example.reproductorvideos.utils.FavoritosManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +54,8 @@ public class ReproducirActivity extends AppCompatActivity {
 
     private List<Video> listaVideos;
 
+    private ImageButton btnFavoritoRepro;
+
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -63,39 +67,34 @@ public class ReproducirActivity extends AppCompatActivity {
             mediaService.playNewVideo(videoUrlActual, videoTituloActual);
             videoTitle.setText(videoTituloActual);
 
-            // Si ya cargaste recomendaciones, asígnalas al servicio
             if (listaVideos != null && !listaVideos.isEmpty()) {
                 mediaService.setListaVideos(listaVideos);
             }
 
-            // Callback para cuando cambie el vídeo
             mediaService.setVideoChangeCallback((url, titulo) -> runOnUiThread(() -> {
                 videoTitle.setText(titulo);
-                videoUrlActual    = url;
+                videoUrlActual = url;
                 videoTituloActual = titulo;
+                actualizarBotonFavorito();
                 cargarRecomendaciones();
             }));
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            // Aquí sí debes implementar este método, aunque solo marques serviceBound=false
             serviceBound = false;
         }
     };
 
-
-
     private final BroadcastReceiver cerrarAppReceiver = new BroadcastReceiver() {
-        @Override public void onReceive(Context ctx, Intent intent) {
-            // 1) Unbind y stop service
+        @Override
+        public void onReceive(Context ctx, Intent intent) {
             if (serviceBound) {
                 unbindService(connection);
                 serviceBound = false;
             }
             stopService(new Intent(ReproducirActivity.this, MediaPlaybackService.class));
 
-            // 2) Remueve todas las tareas de recientes
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
                 if (am != null) {
@@ -104,30 +103,28 @@ public class ReproducirActivity extends AppCompatActivity {
                     }
                 }
             } else {
-                finishAndRemoveTask();  // fallback
+                finishAndRemoveTask();
             }
 
-            // 3) Cierra esta Activity (por si acaso queda alguna)
             finishAndRemoveTask();
 
-            // 4) Mata el proceso tras un leve delay para que Android actualice Recientes
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 android.os.Process.killProcess(android.os.Process.myPid());
             }, 100);
         }
     };
 
-    /** Llamado por el adapter para cambiar vídeo sin recrear la Activity */
     public void reproducirNuevoVideo(String url, String titulo) {
         if (mediaService != null && listaVideos != null && !listaVideos.isEmpty()) {
             mediaService.setListaVideos(listaVideos);
             mediaService.playNewVideo(url, titulo);
         } else {
-            Log.w("ReproducirActivity","⚠ lista vacía");
+            Log.w("ReproducirActivity", "⚠ lista vacía");
         }
         videoTitle.setText(titulo);
-        videoUrlActual    = url;
+        videoUrlActual = url;
         videoTituloActual = titulo;
+        actualizarBotonFavorito();
         cargarRecomendaciones();
     }
 
@@ -136,11 +133,16 @@ public class ReproducirActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reproducir);
 
-        videoTitle             = findViewById(R.id.videoTitle);
-        playerView             = findViewById(R.id.playerView);
+        videoTitle = findViewById(R.id.videoTitle);
+        playerView = findViewById(R.id.playerView);
         recyclerViewRecomendados = findViewById(R.id.recyclerViewRecomendados);
+        btnFavoritoRepro = findViewById(R.id.btnFavoritoRepro);
 
-        videoUrlActual    = getIntent().getStringExtra("video_url");
+        // 🔽 Agregado: botón de regreso funcional
+        ImageView backBtn = findViewById(R.id.back_btn);
+        backBtn.setOnClickListener(v -> finish());
+
+        videoUrlActual = getIntent().getStringExtra("video_url");
         videoTituloActual = getIntent().getStringExtra("video_titulo");
 
         recyclerViewRecomendados.setLayoutManager(new LinearLayoutManager(this));
@@ -159,7 +161,18 @@ public class ReproducirActivity extends AppCompatActivity {
             }
         });
 
-        // arranca y vincula el servicio
+        btnFavoritoRepro.setOnClickListener(v -> {
+            boolean esFavorito = FavoritosManager.esFavorito(this, videoUrlActual);
+            if (esFavorito) {
+                FavoritosManager.quitarFavorito(this, videoUrlActual);
+            } else {
+                FavoritosManager.agregarFavorito(this, videoUrlActual);
+            }
+            actualizarBotonFavorito();
+        });
+
+        actualizarBotonFavorito();
+
         Intent svc = new Intent(this, MediaPlaybackService.class);
         startService(svc);
         bindService(svc, connection, Context.BIND_AUTO_CREATE);
@@ -167,21 +180,31 @@ public class ReproducirActivity extends AppCompatActivity {
         cargarRecomendaciones();
     }
 
+    private void actualizarBotonFavorito() {
+        boolean esFavorito = FavoritosManager.esFavorito(this, videoUrlActual);
+        btnFavoritoRepro.setImageResource(
+                esFavorito ? R.drawable.ic_fav_on : R.drawable.ic_fav_off
+        );
+    }
+
     private void cargarRecomendaciones() {
         ApiService api = RetrofitClient.getApiService(this);
         api.obtenerVideos().enqueue(new Callback<List<Video>>() {
-            @Override public void onResponse(Call<List<Video>> call, Response<List<Video>> resp) {
-                if (!resp.isSuccessful() || resp.body()==null) return;
+            @Override
+            public void onResponse(Call<List<Video>> call, Response<List<Video>> resp) {
+                if (!resp.isSuccessful() || resp.body() == null) return;
                 List<Video> todos = resp.body();
                 listaVideos = new ArrayList<>();
-                for (Video v: todos) if (!v.getUrl().equals(videoUrlActual)) listaVideos.add(v);
+                for (Video v : todos) if (!v.getUrl().equals(videoUrlActual)) listaVideos.add(v);
                 Collections.shuffle(listaVideos);
-                if (listaVideos.size()>5) listaVideos = listaVideos.subList(0,5);
+                if (listaVideos.size() > 5) listaVideos = listaVideos.subList(0, 5);
                 videoAdapter.updateData(listaVideos);
-                if (mediaService!=null) mediaService.setListaVideos(listaVideos);
+                if (mediaService != null) mediaService.setListaVideos(listaVideos);
             }
-            @Override public void onFailure(Call<List<Video>> call, Throwable t) {
-                Log.e("ReproducirActivity","❌ recomendaciones:",t);
+
+            @Override
+            public void onFailure(Call<List<Video>> call, Throwable t) {
+                Log.e("ReproducirActivity", "❌ recomendaciones:", t);
             }
         });
     }
@@ -217,6 +240,4 @@ public class ReproducirActivity extends AppCompatActivity {
             playerView.postDelayed(() -> playerView.setPlayer(mediaService.getPlayer()), 100);
         }
     }
-
-
 }

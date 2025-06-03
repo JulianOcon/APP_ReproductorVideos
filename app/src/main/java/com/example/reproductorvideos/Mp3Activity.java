@@ -73,6 +73,9 @@ public class Mp3Activity extends AppCompatActivity {
     private TextView miniTitle, miniArtist, miniCurrentTime, miniTotalTime;
     private ImageButton btnVideos, btnMp3;
 
+    private ImageView btnVerFavoritos;
+
+
     // Handler para actualizar solo el tiempo cada segundo
     private final Handler miniHandler = new Handler();
     private final Runnable timeUpdater = new Runnable() {
@@ -136,6 +139,12 @@ public class Mp3Activity extends AppCompatActivity {
         recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
         historyAdapter = new HistoryAdapter();
         recyclerViewHistory.setAdapter(historyAdapter);
+
+        btnVerFavoritos = findViewById(R.id.btnVerFavoritos);
+
+        btnVerFavoritos.setOnClickListener(v -> {
+            startActivity(new Intent(Mp3Activity.this, FavoritosMp3Activity.class));
+        });
 
         // Inicialización buscador
         icSearch       = findViewById(R.id.ic_Search);
@@ -268,6 +277,10 @@ public class Mp3Activity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         miniHandler.post(timeUpdater);
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+
     }
 
     @Override

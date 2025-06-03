@@ -15,6 +15,7 @@ public class Video {
     @SerializedName("fecha")
     private long fecha;
 
+    private boolean esFavorito = false;
 
 
     public Video(String title, String url, String thumbnailUrl, long fecha) {
@@ -38,6 +39,14 @@ public class Video {
 
     public long getFecha() {
         return fecha;
+    }
+
+    public boolean isFavorito() {
+        return esFavorito;
+    }
+
+    public void setFavorito(boolean favorito) {
+        this.esFavorito = favorito;
     }
 
 }

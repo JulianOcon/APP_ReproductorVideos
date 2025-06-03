@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.example.reproductorvideos.model.Mp3File;
+import com.example.reproductorvideos.utils.FavoritosManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
@@ -49,6 +51,8 @@ public class ExoPlayerActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler();
     private boolean isShuffledEnabled = false;
+
+    private ImageButton btnFavorito;
 
     private final Runnable updateProgress = new Runnable() {
         @Override public void run() {
@@ -122,17 +126,14 @@ public class ExoPlayerActivity extends AppCompatActivity {
 
             prevBtn.setOnClickListener(v -> {
                 if (!serviceBound) return;
-                mp3Service.playPrevious();  // ¡quita toda lógica de shuffle aquí!
+                mp3Service.playPrevious();
             });
 
-
-            // **NEXT**: delega en el servicio (que ya respeta shuffle)
             nextBtn.setOnClickListener(v -> {
                 if (!serviceBound) return;
                 mp3Service.playNext();
             });
 
-            // Shuffle toggle: mantiene tu lógica
             shuffleBtn.setOnClickListener(v -> {
                 boolean was = player.getShuffleModeEnabled();
                 long posMs = player.getCurrentPosition();
@@ -146,7 +147,6 @@ public class ExoPlayerActivity extends AppCompatActivity {
                 }
             });
 
-            // Repeat toggle (igual que antes)
             repeatBtn.setOnClickListener(v -> {
                 int mode = player.getRepeatMode();
                 int next = mode == Player.REPEAT_MODE_OFF
@@ -162,7 +162,6 @@ public class ExoPlayerActivity extends AppCompatActivity {
                 );
             });
 
-            // SeekBar
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
                     if (fromUser) {
@@ -197,6 +196,7 @@ public class ExoPlayerActivity extends AppCompatActivity {
         seekBar        = findViewById(R.id.seekBar);
         durationPlayed = findViewById(R.id.durationPlayed);
         durationTotal  = findViewById(R.id.durationTotal);
+        btnFavorito = findViewById(R.id.btnFavoritoRepro);
 
         backBtn.setOnClickListener(v -> finish());
     }
@@ -242,6 +242,23 @@ public class ExoPlayerActivity extends AppCompatActivity {
         tituloText.setText(m.getTitulo());
         artistaText.setText(m.getArtista());
 
+        // === FAVORITOS ===
+        String url = m.getUrl();
+        boolean esFavorito = FavoritosManager.esFavoritoMp3(this, url);
+        btnFavorito.setImageResource(
+                esFavorito ? R.drawable.ic_fav_on : R.drawable.ic_fav_off
+        );
+        btnFavorito.setOnClickListener(v -> {
+            boolean nuevoEstado = !FavoritosManager.esFavoritoMp3(this, url);
+            if (nuevoEstado) {
+                FavoritosManager.agregarFavoritoMp3(this, url);
+                btnFavorito.setImageResource(R.drawable.ic_fav_on);
+            } else {
+                FavoritosManager.quitarFavoritoMp3(this, url);
+                btnFavorito.setImageResource(R.drawable.ic_fav_off);
+            }
+        });
+
         byte[] art = m.getArtworkData();
         if (art != null && art.length > 0) {
             Bitmap bmp = BitmapFactory.decodeByteArray(art, 0, art.length);
@@ -271,7 +288,7 @@ public class ExoPlayerActivity extends AppCompatActivity {
     }
 
     private String formattedTime(int s) {
-        int m = s/60, sec = s%60;
+        int m = s / 60, sec = s % 60;
         return String.format("%d:%02d", m, sec);
     }
 }

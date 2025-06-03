@@ -26,6 +26,15 @@
             android:src="@drawable/icredlucia" />
 
         <ImageView
+            android:id="@+id/btnVerFavoritos"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="12dp"
+            android:src="@drawable/ic_fav_on"
+            android:contentDescription="Ver favoritos" />
+
+
+        <ImageView
             android:id="@+id/ic_Search"
             android:layout_width="35dp"
             android:layout_height="35dp"

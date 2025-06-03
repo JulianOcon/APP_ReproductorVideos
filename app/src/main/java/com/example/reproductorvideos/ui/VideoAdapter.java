@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.reproductorvideos.utils.FavoritosManager;
 import com.example.reproductorvideos.R;
 import com.example.reproductorvideos.model.Video;
 import com.example.reproductorvideos.ReproducirActivity;
@@ -45,9 +46,25 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
                 .placeholder(R.drawable.placeholder)
                 .into(holder.thumbnailImage);
 
+        boolean esFavorito = FavoritosManager.esFavorito(context, video.getUrl());
+        video.setFavorito(esFavorito);
+        holder.btnFavorito.setImageResource(
+                esFavorito ? R.drawable.ic_fav_on : R.drawable.ic_fav_off);
+
+        holder.btnFavorito.setOnClickListener(v-> {
+            boolean nuevoEstado = !video.isFavorito();
+            video.setFavorito(nuevoEstado);
+            if (nuevoEstado) {
+                FavoritosManager.agregarFavorito(context, video.getUrl());
+                holder.btnFavorito.setImageResource(R.drawable.ic_fav_on);
+            } else {
+                FavoritosManager.quitarFavorito(context, video.getUrl());
+                holder.btnFavorito.setImageResource(R.drawable.ic_fav_off);
+            }
+        });
+
         holder.itemView.setOnClickListener(v -> {
             if (context instanceof ReproducirActivity) {
-                // Método reproducirNuevoVideo debe ser público en ReproducirActivity
                 ((ReproducirActivity) context).reproducirNuevoVideo(video.getUrl(), video.getTitle());
             } else {
                 Intent intent = new Intent(context, ReproducirActivity.class);
@@ -72,11 +89,13 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
     public static class VideoViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
         ImageView thumbnailImage;
+        ImageView btnFavorito;
 
         public VideoViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.videoTitle);
             thumbnailImage = itemView.findViewById(R.id.thumbnailImage);
+            btnFavorito = itemView.findViewById(R.id.btnFavorito);
         }
     }
 
